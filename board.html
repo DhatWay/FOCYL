@@ -1,0 +1,443 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Focyl — Board</title>
+<meta name="theme-color" content="#070914">
+
+<!--
+  FOCYL — BOARD
+  ────────────────────────────────────────────────────────────
+  Requires: schema.sql + 02_boards_and_tiles.sql already run in
+  Supabase, and the same SUPABASE_URL / SUPABASE_ANON_KEY as
+  auth.html pasted in below.
+
+  v1 scope: image tiles (from the free photo APIs or a device
+  upload) and typed quote tiles. No generation, no data/connector
+  tiles yet — those are Stage 2+ per PROJECT-MAP.md.
+
+  FREE PHOTO SEARCH — same pattern as index.html:
+    Unsplash: https://unsplash.com/developers  (50 req/hr free)
+    Pexels:   https://www.pexels.com/api/      (200 req/hr free)
+  Leave both blank and Photo search will just tell the user to
+  upload their own for now — nothing breaks.
+  ────────────────────────────────────────────────────────────
+-->
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Sora:wght@400;500;600&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="shared/config.js"></script>
+
+<style>
+  :root{
+    --void:#070914; --ink:#0d1224; --ink-2:#121a34;
+    --line:rgba(237,239,247,0.09);
+    --paper:#EDEFF7; --mist:#9AA4C7;
+    --cyan:#35D8F0; --violet:#8B7CF6; --magenta:#EA4FC9;
+    --grad: linear-gradient(135deg, var(--cyan), var(--violet) 55%, var(--magenta));
+    --display:'Space Grotesk', sans-serif;
+    --body:'Sora', sans-serif;
+    --mono:'Space Mono', monospace;
+  }
+  *{box-sizing:border-box;}
+  html,body{ height:100%; }
+  body{
+    margin:0; background:var(--void); color:var(--paper);
+    font-family:var(--body); overflow:hidden;
+    -webkit-tap-highlight-color:transparent;
+  }
+
+  /* ---------- TOP BAR ---------- */
+  .topbar{
+    position:fixed; top:0; left:0; right:0; z-index:20;
+    display:flex; align-items:center; justify-content:space-between;
+    padding:14px 16px;
+    background:linear-gradient(180deg, rgba(7,9,20,0.9), rgba(7,9,20,0));
+    backdrop-filter:blur(6px);
+  }
+  .back{
+    background:transparent; border:none; color:var(--mist);
+    font-size:0.85rem; cursor:pointer; padding:6px 0; font-family:inherit;
+  }
+  .title{ font-family:var(--display); font-weight:600; font-size:0.95rem; }
+  .status{ font-family:var(--mono); font-size:0.68rem; color:var(--mist); }
+
+  /* ---------- CANVAS ---------- */
+  .canvas-wrap{
+    position:absolute; inset:0;
+    overflow:auto;
+    -webkit-overflow-scrolling:touch;
+  }
+  .canvas{
+    position:relative;
+    width:1600px; height:1600px;
+    background-image:
+      radial-gradient(rgba(237,239,247,0.05) 1px, transparent 1px);
+    background-size:28px 28px;
+  }
+  .canvas::before, .canvas::after{
+    content:""; position:absolute; width:900px; height:900px;
+    border-radius:50%; filter:blur(120px); opacity:0.12; pointer-events:none;
+  }
+  .canvas::before{ top:-200px; left:-200px; background:var(--cyan); }
+  .canvas::after{ bottom:-200px; right:-200px; background:var(--magenta); }
+
+  /* ---------- TILE ---------- */
+  .tile{
+    position:absolute;
+    border-radius:16px;
+    border:1px solid var(--line);
+    box-shadow:0 14px 30px -16px rgba(0,0,0,0.7);
+    touch-action:none;
+    cursor:grab;
+    overflow:hidden;
+    background-size:cover; background-position:center;
+    background-color:var(--ink);
+  }
+  .tile:active{ cursor:grabbing; }
+  .tile.dragging{ z-index:50; box-shadow:0 24px 50px -18px rgba(0,0,0,0.85); }
+  .tile.quote{
+    display:flex; align-items:flex-end;
+    padding:14px;
+    font-family:var(--display); font-size:1rem; line-height:1.3;
+    background:linear-gradient(155deg, var(--ink-2), var(--ink));
+  }
+  .tile .del{
+    position:absolute; top:6px; right:6px;
+    width:22px; height:22px; border-radius:50%;
+    background:rgba(7,9,20,0.6); border:1px solid var(--line);
+    color:var(--paper); font-family:var(--mono); font-size:0.8rem;
+    display:flex; align-items:center; justify-content:center;
+    cursor:pointer; opacity:0; transition:opacity .2s ease;
+  }
+  .tile:hover .del, .tile.dragging .del{ opacity:1; }
+
+  /* ---------- FAB ---------- */
+  .fab{
+    position:fixed; right:20px; bottom:26px; z-index:20;
+    width:58px; height:58px; border-radius:50%;
+    background:var(--grad); border:none; cursor:pointer;
+    box-shadow:0 14px 30px -10px rgba(139,124,246,0.6);
+    display:flex; align-items:center; justify-content:center;
+  }
+  .fab svg{ width:22px; height:22px; }
+
+  /* ---------- SHEET ---------- */
+  .scrim{
+    position:fixed; inset:0; background:rgba(7,9,20,0.6);
+    z-index:30; opacity:0; pointer-events:none; transition:opacity .25s ease;
+  }
+  .scrim.open{ opacity:1; pointer-events:auto; }
+
+  .sheet{
+    position:fixed; left:0; right:0; bottom:0; z-index:31;
+    background:var(--ink);
+    border:1px solid var(--line); border-bottom:none;
+    border-radius:22px 22px 0 0;
+    padding:20px 20px calc(20px + env(safe-area-inset-bottom));
+    transform:translateY(100%);
+    transition:transform .3s cubic-bezier(.2,.8,.2,1);
+    max-height:72vh; overflow-y:auto;
+  }
+  .sheet.open{ transform:translateY(0); }
+
+  .grabber{ width:36px; height:4px; background:var(--line); border-radius:4px; margin:0 auto 18px; }
+
+  .tabs{ display:flex; gap:6px; margin-bottom:18px; background:var(--ink-2); border-radius:100px; padding:4px; }
+  .tab{
+    flex:1; text-align:center; padding:9px 0; border-radius:100px;
+    font-size:0.82rem; font-weight:600; cursor:pointer; color:var(--mist);
+    border:none; background:transparent; font-family:inherit;
+  }
+  .tab.active{ background:var(--grad); color:#070914; }
+
+  .panel{ display:none; }
+  .panel.active{ display:block; }
+
+  label{ display:block; font-family:var(--mono); font-size:0.7rem; text-transform:uppercase; letter-spacing:0.08em; color:var(--mist); margin:0 0 6px; }
+  input[type=text], textarea{
+    width:100%; background:var(--ink-2); border:1px solid var(--line);
+    color:var(--paper); border-radius:12px; padding:12px 14px;
+    font-family:var(--body); font-size:0.95rem; margin-bottom:12px; resize:none;
+  }
+  .btn-primary{
+    width:100%; background:var(--grad); color:#070914; border:none;
+    border-radius:100px; padding:13px 0; font-weight:600; font-size:0.95rem;
+    cursor:pointer; margin-bottom:10px;
+  }
+  .btn-ghost{
+    width:100%; background:transparent; border:1px dashed rgba(237,239,247,0.25);
+    color:var(--paper); border-radius:14px; padding:13px 0; font-weight:600;
+    font-size:0.9rem; cursor:pointer; margin-bottom:10px;
+  }
+  .hint{ font-family:var(--mono); font-size:0.75rem; color:var(--mist); margin:0 0 12px; }
+
+  .results{ display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin-bottom:10px; }
+  .results .thumb{
+    aspect-ratio:1/1; border-radius:10px; background-size:cover; background-position:center;
+    border:1px solid var(--line); cursor:pointer; background-color:var(--ink-2);
+  }
+
+  input[type=file]{ display:none; }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <button class="back" id="backBtn">← Focyl</button>
+  <span class="title" id="boardTitle">My board</span>
+  <span class="status" id="statusText">Saved</span>
+</div>
+
+<div class="canvas-wrap" id="canvasWrap">
+  <div class="canvas" id="canvas"></div>
+</div>
+
+<button class="fab" id="fabBtn" aria-label="Add tile">
+  <svg viewBox="0 0 24 24" fill="none" stroke="#070914" stroke-width="2.4" stroke-linecap="round">
+    <line x1="12" y1="5" x2="12" y2="19"/>
+    <line x1="5" y1="12" x2="19" y2="12"/>
+  </svg>
+</button>
+
+<div class="scrim" id="scrim"></div>
+<div class="sheet" id="sheet">
+  <div class="grabber"></div>
+  <div class="tabs">
+    <button class="tab active" id="tabPhoto">Photo</button>
+    <button class="tab" id="tabWords">Words</button>
+  </div>
+
+  <div class="panel active" id="panelPhoto">
+    <label for="photoQuery">Search free photos</label>
+    <input type="text" id="photoQuery" placeholder="studio, mid thirties…">
+    <button class="btn-primary" id="searchBtn">Search</button>
+    <div class="results" id="results"></div>
+    <p class="hint" id="photoHint"></p>
+    <label>Or use your own</label>
+    <button class="btn-ghost" id="uploadBtn">Upload from device</button>
+    <input type="file" id="fileInput" accept="image/*">
+  </div>
+
+  <div class="panel" id="panelWords">
+    <label for="quoteText">In your own words, future tense</label>
+    <textarea id="quoteText" rows="3" placeholder="I run my own studio."></textarea>
+    <button class="btn-primary" id="addQuoteBtn">Add to board</button>
+  </div>
+</div>
+
+<script>
+/* ────────────────────────────────────────────────────────────
+   sb comes from shared/config.js. Only the photo-API keys are
+   page-specific, so they stay here.
+──────────────────────────────────────────────────────────── */
+const TILE_CONFIG = {
+  unsplashKey: '',   // https://unsplash.com/developers
+  pexelsKey: '',     // https://www.pexels.com/api/
+};
+
+let user = null;
+let board = null;
+const canvas = document.getElementById('canvas');
+const canvasWrap = document.getElementById('canvasWrap');
+const statusText = document.getElementById('statusText');
+
+function setStatus(text){ statusText.textContent = text; }
+
+/* ---------- boot ---------- */
+(async function boot(){
+  const { data: { session } } = await sb.auth.getSession();
+  if (!session){ window.location.href = 'auth.html'; return; }
+  user = session.user;
+
+  let { data: boards } = await sb.from('boards').select('*').eq('user_id', user.id).order('created_at').limit(1);
+  board = boards && boards[0];
+  if (!board){
+    const { data: created } = await sb.from('boards').insert({ user_id: user.id }).select().single();
+    board = created;
+  }
+  document.getElementById('boardTitle').textContent = board.title;
+
+  const { data: tiles } = await sb.from('tiles').select('*').eq('board_id', board.id).order('created_at');
+  (tiles || []).forEach(renderTile);
+
+  // center scroll roughly on existing content
+  canvasWrap.scrollLeft = 500; canvasWrap.scrollTop = 500;
+})();
+
+document.getElementById('backBtn').addEventListener('click', () => window.location.href = 'index.html');
+
+/* ---------- tile rendering + drag ---------- */
+function renderTile(t){
+  const el = document.createElement('div');
+  el.className = 'tile' + (t.type === 'quote' ? ' quote' : '');
+  el.style.left = t.x + 'px';
+  el.style.top = t.y + 'px';
+  el.style.width = t.w + 'px';
+  el.style.height = t.h + 'px';
+  el.dataset.id = t.id;
+
+  if (t.type === 'image'){
+    el.style.backgroundImage = `url('${t.content.url}')`;
+  } else {
+    el.textContent = t.content.text || '';
+  }
+
+  const del = document.createElement('div');
+  del.className = 'del';
+  del.textContent = '×';
+  del.addEventListener('pointerdown', (e) => e.stopPropagation());
+  del.addEventListener('click', async (e) => {
+    e.stopPropagation();
+    await sb.from('tiles').delete().eq('id', t.id);
+    el.remove();
+  });
+  el.appendChild(del);
+
+  makeDraggable(el, t.id);
+  canvas.appendChild(el);
+}
+
+function makeDraggable(el, id){
+  let startX, startY, origLeft, origTop, dragging = false;
+
+  el.addEventListener('pointerdown', (e) => {
+    dragging = true;
+    el.classList.add('dragging');
+    el.setPointerCapture(e.pointerId);
+    startX = e.clientX; startY = e.clientY;
+    origLeft = parseFloat(el.style.left);
+    origTop = parseFloat(el.style.top);
+  });
+
+  el.addEventListener('pointermove', (e) => {
+    if (!dragging) return;
+    const dx = e.clientX - startX;
+    const dy = e.clientY - startY;
+    el.style.left = (origLeft + dx) + 'px';
+    el.style.top = (origTop + dy) + 'px';
+  });
+
+  async function endDrag(e){
+    if (!dragging) return;
+    dragging = false;
+    el.classList.remove('dragging');
+    setStatus('Saving…');
+    const x = parseFloat(el.style.left);
+    const y = parseFloat(el.style.top);
+    await sb.from('tiles').update({ x, y }).eq('id', id);
+    setStatus('Saved');
+  }
+  el.addEventListener('pointerup', endDrag);
+  el.addEventListener('pointercancel', endDrag);
+}
+
+async function addTile(partial){
+  setStatus('Saving…');
+  const defaults = {
+    board_id: board.id,
+    x: canvasWrap.scrollLeft + 60,
+    y: canvasWrap.scrollTop + 60,
+    w: 160, h: 160, z: 1, source: 'library'
+  };
+  const row = { ...defaults, ...partial };
+  const { data, error } = await sb.from('tiles').insert(row).select().single();
+  if (error){ setStatus('Error'); console.error(error); return; }
+  renderTile(data);
+  setStatus('Saved');
+}
+
+/* ---------- sheet open/close ---------- */
+const sheet = document.getElementById('sheet');
+const scrim = document.getElementById('scrim');
+function openSheet(){ sheet.classList.add('open'); scrim.classList.add('open'); }
+function closeSheet(){ sheet.classList.remove('open'); scrim.classList.remove('open'); }
+document.getElementById('fabBtn').addEventListener('click', openSheet);
+scrim.addEventListener('click', closeSheet);
+
+/* ---------- tabs ---------- */
+const tabPhoto = document.getElementById('tabPhoto');
+const tabWords = document.getElementById('tabWords');
+const panelPhoto = document.getElementById('panelPhoto');
+const panelWords = document.getElementById('panelWords');
+tabPhoto.addEventListener('click', () => {
+  tabPhoto.classList.add('active'); tabWords.classList.remove('active');
+  panelPhoto.classList.add('active'); panelWords.classList.remove('active');
+});
+tabWords.addEventListener('click', () => {
+  tabWords.classList.add('active'); tabPhoto.classList.remove('active');
+  panelWords.classList.add('active'); panelPhoto.classList.remove('active');
+});
+
+/* ---------- photo search (Unsplash / Pexels) ---------- */
+async function searchPhotos(query){
+  const hint = document.getElementById('photoHint');
+  const results = document.getElementById('results');
+  results.innerHTML = '';
+  hint.textContent = '';
+
+  if (TILE_CONFIG.unsplashKey){
+    const res = await fetch(`https://api.unsplash.com/search/photos?query=${encodeURIComponent(query)}&per_page=9&client_id=${TILE_CONFIG.unsplashKey}`);
+    const data = await res.json();
+    (data.results || []).forEach(p => addResultThumb(p.urls.small, p.urls.regular));
+    return;
+  }
+  if (TILE_CONFIG.pexelsKey){
+    const res = await fetch(`https://api.pexels.com/v1/search?query=${encodeURIComponent(query)}&per_page=9`, {
+      headers: { Authorization: TILE_CONFIG.pexelsKey }
+    });
+    const data = await res.json();
+    (data.photos || []).forEach(p => addResultThumb(p.src.medium, p.src.large));
+    return;
+  }
+  hint.textContent = 'No photo API key set yet — add one in board.html, or upload your own below.';
+}
+
+function addResultThumb(thumbUrl, fullUrl){
+  const div = document.createElement('div');
+  div.className = 'thumb';
+  div.style.backgroundImage = `url('${thumbUrl}')`;
+  div.addEventListener('click', () => {
+    addTile({ type: 'image', content: { url: fullUrl }, source: TILE_CONFIG.unsplashKey ? 'unsplash' : 'pexels' });
+    closeSheet();
+  });
+  document.getElementById('results').appendChild(div);
+}
+
+document.getElementById('searchBtn').addEventListener('click', () => {
+  const q = document.getElementById('photoQuery').value.trim();
+  if (q) searchPhotos(q);
+});
+
+/* ---------- upload ---------- */
+document.getElementById('uploadBtn').addEventListener('click', () => document.getElementById('fileInput').click());
+document.getElementById('fileInput').addEventListener('change', async (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+  const hint = document.getElementById('photoHint');
+  hint.textContent = 'Uploading…';
+
+  const path = `${user.id}/${crypto.randomUUID()}-${file.name}`;
+  const { error: upErr } = await sb.storage.from('tile-uploads').upload(path, file);
+  if (upErr){ hint.textContent = 'Upload failed — try a smaller image.'; return; }
+
+  const { data: pub } = sb.storage.from('tile-uploads').getPublicUrl(path);
+  await addTile({ type: 'image', content: { url: pub.publicUrl }, source: 'upload' });
+  hint.textContent = '';
+  closeSheet();
+});
+
+/* ---------- quote tile ---------- */
+document.getElementById('addQuoteBtn').addEventListener('click', () => {
+  const text = document.getElementById('quoteText').value.trim();
+  if (!text) return;
+  addTile({ type: 'quote', content: { text }, w: 180, h: 120, source: 'custom' });
+  document.getElementById('quoteText').value = '';
+  closeSheet();
+});
+</script>
+</body>
+</html>
