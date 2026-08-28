@@ -7,29 +7,28 @@
 <meta name="theme-color" content="#070914">
 
 <!--
-  FOCYL — BOARD
+  FOCYL — BOARD (SHELL MODE)
   ────────────────────────────────────────────────────────────
-  Requires: schema.sql + 02_boards_and_tiles.sql already run in
-  Supabase, and the same SUPABASE_URL / SUPABASE_ANON_KEY as
-  auth.html pasted in below.
+  Persists to localStorage under focyl_board_{email} — no
+  Supabase call here. Requires focyl_user in localStorage
+  (set by auth.html); redirects to auth.html if missing.
 
-  v1 scope: image tiles (from the free photo APIs or a device
-  upload) and typed quote tiles. No generation, no data/connector
-  tiles yet — those are Stage 2+ per PROJECT-MAP.md.
+  Photo search still hits real free APIs (Unsplash/Pexels) if
+  you set a key below — that part never depended on the backend.
+  Uploads are read as base64 and stored directly in the tile —
+  fine for a shell, but localStorage caps out around 5MB total,
+  so this is the first thing to swap for Supabase Storage later.
 
-  FREE PHOTO SEARCH — same pattern as index.html:
-    Unsplash: https://unsplash.com/developers  (50 req/hr free)
-    Pexels:   https://www.pexels.com/api/      (200 req/hr free)
-  Leave both blank and Photo search will just tell the user to
-  upload their own for now — nothing breaks.
+  SWAP IN REAL BACKEND LATER: replace loadBoard()/saveBoard()
+  with the Supabase reads/writes from supabase/schema-02-boards.sql
+  — the render/drag/add functions below don't need to change,
+  they just need board.tiles to come from the DB instead.
   ────────────────────────────────────────────────────────────
 -->
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Sora:wght@400;500;600&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="shared/config.js"></script>
 
 <style>
   :root{
@@ -50,7 +49,6 @@
     -webkit-tap-highlight-color:transparent;
   }
 
-  /* ---------- TOP BAR ---------- */
   .topbar{
     position:fixed; top:0; left:0; right:0; z-index:20;
     display:flex; align-items:center; justify-content:space-between;
@@ -58,24 +56,14 @@
     background:linear-gradient(180deg, rgba(7,9,20,0.9), rgba(7,9,20,0));
     backdrop-filter:blur(6px);
   }
-  .back{
-    background:transparent; border:none; color:var(--mist);
-    font-size:0.85rem; cursor:pointer; padding:6px 0; font-family:inherit;
-  }
+  .back{ background:transparent; border:none; color:var(--mist); font-size:0.85rem; cursor:pointer; padding:6px 0; font-family:inherit; }
   .title{ font-family:var(--display); font-weight:600; font-size:0.95rem; }
   .status{ font-family:var(--mono); font-size:0.68rem; color:var(--mist); }
 
-  /* ---------- CANVAS ---------- */
-  .canvas-wrap{
-    position:absolute; inset:0;
-    overflow:auto;
-    -webkit-overflow-scrolling:touch;
-  }
+  .canvas-wrap{ position:absolute; inset:0; overflow:auto; -webkit-overflow-scrolling:touch; }
   .canvas{
-    position:relative;
-    width:1600px; height:1600px;
-    background-image:
-      radial-gradient(rgba(237,239,247,0.05) 1px, transparent 1px);
+    position:relative; width:1600px; height:1600px;
+    background-image: radial-gradient(rgba(237,239,247,0.05) 1px, transparent 1px);
     background-size:28px 28px;
   }
   .canvas::before, .canvas::after{
@@ -85,37 +73,28 @@
   .canvas::before{ top:-200px; left:-200px; background:var(--cyan); }
   .canvas::after{ bottom:-200px; right:-200px; background:var(--magenta); }
 
-  /* ---------- TILE ---------- */
   .tile{
-    position:absolute;
-    border-radius:16px;
-    border:1px solid var(--line);
+    position:absolute; border-radius:16px; border:1px solid var(--line);
     box-shadow:0 14px 30px -16px rgba(0,0,0,0.7);
-    touch-action:none;
-    cursor:grab;
-    overflow:hidden;
-    background-size:cover; background-position:center;
-    background-color:var(--ink);
+    touch-action:none; cursor:grab; overflow:hidden;
+    background-size:cover; background-position:center; background-color:var(--ink);
   }
   .tile:active{ cursor:grabbing; }
   .tile.dragging{ z-index:50; box-shadow:0 24px 50px -18px rgba(0,0,0,0.85); }
   .tile.quote{
-    display:flex; align-items:flex-end;
-    padding:14px;
+    display:flex; align-items:flex-end; padding:14px;
     font-family:var(--display); font-size:1rem; line-height:1.3;
     background:linear-gradient(155deg, var(--ink-2), var(--ink));
   }
   .tile .del{
-    position:absolute; top:6px; right:6px;
-    width:22px; height:22px; border-radius:50%;
-    background:rgba(7,9,20,0.6); border:1px solid var(--line);
-    color:var(--paper); font-family:var(--mono); font-size:0.8rem;
+    position:absolute; top:6px; right:6px; width:22px; height:22px; border-radius:50%;
+    background:rgba(7,9,20,0.6); border:1px solid var(--line); color:var(--paper);
+    font-family:var(--mono); font-size:0.8rem;
     display:flex; align-items:center; justify-content:center;
     cursor:pointer; opacity:0; transition:opacity .2s ease;
   }
   .tile:hover .del, .tile.dragging .del{ opacity:1; }
 
-  /* ---------- FAB ---------- */
   .fab{
     position:fixed; right:20px; bottom:26px; z-index:20;
     width:58px; height:58px; border-radius:50%;
@@ -125,25 +104,17 @@
   }
   .fab svg{ width:22px; height:22px; }
 
-  /* ---------- SHEET ---------- */
-  .scrim{
-    position:fixed; inset:0; background:rgba(7,9,20,0.6);
-    z-index:30; opacity:0; pointer-events:none; transition:opacity .25s ease;
-  }
+  .scrim{ position:fixed; inset:0; background:rgba(7,9,20,0.6); z-index:30; opacity:0; pointer-events:none; transition:opacity .25s ease; }
   .scrim.open{ opacity:1; pointer-events:auto; }
 
   .sheet{
-    position:fixed; left:0; right:0; bottom:0; z-index:31;
-    background:var(--ink);
-    border:1px solid var(--line); border-bottom:none;
-    border-radius:22px 22px 0 0;
+    position:fixed; left:0; right:0; bottom:0; z-index:31; background:var(--ink);
+    border:1px solid var(--line); border-bottom:none; border-radius:22px 22px 0 0;
     padding:20px 20px calc(20px + env(safe-area-inset-bottom));
-    transform:translateY(100%);
-    transition:transform .3s cubic-bezier(.2,.8,.2,1);
+    transform:translateY(100%); transition:transform .3s cubic-bezier(.2,.8,.2,1);
     max-height:72vh; overflow-y:auto;
   }
   .sheet.open{ transform:translateY(0); }
-
   .grabber{ width:36px; height:4px; background:var(--line); border-radius:4px; margin:0 auto 18px; }
 
   .tabs{ display:flex; gap:6px; margin-bottom:18px; background:var(--ink-2); border-radius:100px; padding:4px; }
@@ -153,7 +124,6 @@
     border:none; background:transparent; font-family:inherit;
   }
   .tab.active{ background:var(--grad); color:#070914; }
-
   .panel{ display:none; }
   .panel.active{ display:block; }
 
@@ -174,13 +144,11 @@
     font-size:0.9rem; cursor:pointer; margin-bottom:10px;
   }
   .hint{ font-family:var(--mono); font-size:0.75rem; color:var(--mist); margin:0 0 12px; }
-
   .results{ display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin-bottom:10px; }
   .results .thumb{
     aspect-ratio:1/1; border-radius:10px; background-size:cover; background-position:center;
     border:1px solid var(--line); cursor:pointer; background-color:var(--ink-2);
   }
-
   input[type=file]{ display:none; }
 </style>
 </head>
@@ -198,8 +166,7 @@
 
 <button class="fab" id="fabBtn" aria-label="Add tile">
   <svg viewBox="0 0 24 24" fill="none" stroke="#070914" stroke-width="2.4" stroke-linecap="round">
-    <line x1="12" y1="5" x2="12" y2="19"/>
-    <line x1="5" y1="12" x2="19" y2="12"/>
+    <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
   </svg>
 </button>
 
@@ -230,54 +197,38 @@
 </div>
 
 <script>
-/* ────────────────────────────────────────────────────────────
-   sb comes from shared/config.js. Only the photo-API keys are
-   page-specific, so they stay here.
-──────────────────────────────────────────────────────────── */
 const TILE_CONFIG = {
   unsplashKey: '',   // https://unsplash.com/developers
   pexelsKey: '',     // https://www.pexels.com/api/
 };
 
-let user = null;
-let board = null;
+/* ---------- session guard ---------- */
+const session = JSON.parse(localStorage.getItem('focyl_user') || 'null');
+if (!session){ window.location.href = 'auth.html'; }
+
+const boardKey = `focyl_board_${session.email}`;
+let board = JSON.parse(localStorage.getItem(boardKey) || 'null')
+  || { title: 'My board', tiles: [] };
+
+function saveBoard(){ localStorage.setItem(boardKey, JSON.stringify(board)); }
+
 const canvas = document.getElementById('canvas');
 const canvasWrap = document.getElementById('canvasWrap');
 const statusText = document.getElementById('statusText');
+function setStatus(t){ statusText.textContent = t; }
 
-function setStatus(text){ statusText.textContent = text; }
-
-/* ---------- boot ---------- */
-(async function boot(){
-  const { data: { session } } = await sb.auth.getSession();
-  if (!session){ window.location.href = 'auth.html'; return; }
-  user = session.user;
-
-  let { data: boards } = await sb.from('boards').select('*').eq('user_id', user.id).order('created_at').limit(1);
-  board = boards && boards[0];
-  if (!board){
-    const { data: created } = await sb.from('boards').insert({ user_id: user.id }).select().single();
-    board = created;
-  }
-  document.getElementById('boardTitle').textContent = board.title;
-
-  const { data: tiles } = await sb.from('tiles').select('*').eq('board_id', board.id).order('created_at');
-  (tiles || []).forEach(renderTile);
-
-  // center scroll roughly on existing content
-  canvasWrap.scrollLeft = 500; canvasWrap.scrollTop = 500;
-})();
+document.getElementById('boardTitle').textContent = board.title;
+board.tiles.forEach(renderTile);
+canvasWrap.scrollLeft = 500; canvasWrap.scrollTop = 500;
 
 document.getElementById('backBtn').addEventListener('click', () => window.location.href = 'index.html');
 
-/* ---------- tile rendering + drag ---------- */
+/* ---------- render + drag ---------- */
 function renderTile(t){
   const el = document.createElement('div');
   el.className = 'tile' + (t.type === 'quote' ? ' quote' : '');
-  el.style.left = t.x + 'px';
-  el.style.top = t.y + 'px';
-  el.style.width = t.w + 'px';
-  el.style.height = t.h + 'px';
+  el.style.left = t.x + 'px'; el.style.top = t.y + 'px';
+  el.style.width = t.w + 'px'; el.style.height = t.h + 'px';
   el.dataset.id = t.id;
 
   if (t.type === 'image'){
@@ -290,9 +241,10 @@ function renderTile(t){
   del.className = 'del';
   del.textContent = '×';
   del.addEventListener('pointerdown', (e) => e.stopPropagation());
-  del.addEventListener('click', async (e) => {
+  del.addEventListener('click', (e) => {
     e.stopPropagation();
-    await sb.from('tiles').delete().eq('id', t.id);
+    board.tiles = board.tiles.filter(x => x.id !== t.id);
+    saveBoard();
     el.remove();
   });
   el.appendChild(del);
@@ -309,48 +261,42 @@ function makeDraggable(el, id){
     el.classList.add('dragging');
     el.setPointerCapture(e.pointerId);
     startX = e.clientX; startY = e.clientY;
-    origLeft = parseFloat(el.style.left);
-    origTop = parseFloat(el.style.top);
+    origLeft = parseFloat(el.style.left); origTop = parseFloat(el.style.top);
   });
 
   el.addEventListener('pointermove', (e) => {
     if (!dragging) return;
-    const dx = e.clientX - startX;
-    const dy = e.clientY - startY;
-    el.style.left = (origLeft + dx) + 'px';
-    el.style.top = (origTop + dy) + 'px';
+    el.style.left = (origLeft + e.clientX - startX) + 'px';
+    el.style.top = (origTop + e.clientY - startY) + 'px';
   });
 
-  async function endDrag(e){
+  function endDrag(){
     if (!dragging) return;
     dragging = false;
     el.classList.remove('dragging');
-    setStatus('Saving…');
-    const x = parseFloat(el.style.left);
-    const y = parseFloat(el.style.top);
-    await sb.from('tiles').update({ x, y }).eq('id', id);
+    const x = parseFloat(el.style.left), y = parseFloat(el.style.top);
+    const tile = board.tiles.find(t => t.id === id);
+    if (tile){ tile.x = x; tile.y = y; saveBoard(); }
     setStatus('Saved');
   }
   el.addEventListener('pointerup', endDrag);
   el.addEventListener('pointercancel', endDrag);
 }
 
-async function addTile(partial){
-  setStatus('Saving…');
-  const defaults = {
-    board_id: board.id,
-    x: canvasWrap.scrollLeft + 60,
-    y: canvasWrap.scrollTop + 60,
-    w: 160, h: 160, z: 1, source: 'library'
+function addTile(partial){
+  const tile = {
+    id: crypto.randomUUID(),
+    x: canvasWrap.scrollLeft + 60, y: canvasWrap.scrollTop + 60,
+    w: 160, h: 160, z: 1, source: 'library',
+    ...partial
   };
-  const row = { ...defaults, ...partial };
-  const { data, error } = await sb.from('tiles').insert(row).select().single();
-  if (error){ setStatus('Error'); console.error(error); return; }
-  renderTile(data);
+  board.tiles.push(tile);
+  saveBoard();
+  renderTile(tile);
   setStatus('Saved');
 }
 
-/* ---------- sheet open/close ---------- */
+/* ---------- sheet ---------- */
 const sheet = document.getElementById('sheet');
 const scrim = document.getElementById('scrim');
 function openSheet(){ sheet.classList.add('open'); scrim.classList.add('open'); }
@@ -358,7 +304,6 @@ function closeSheet(){ sheet.classList.remove('open'); scrim.classList.remove('o
 document.getElementById('fabBtn').addEventListener('click', openSheet);
 scrim.addEventListener('click', closeSheet);
 
-/* ---------- tabs ---------- */
 const tabPhoto = document.getElementById('tabPhoto');
 const tabWords = document.getElementById('tabWords');
 const panelPhoto = document.getElementById('panelPhoto');
@@ -372,12 +317,11 @@ tabWords.addEventListener('click', () => {
   panelWords.classList.add('active'); panelPhoto.classList.remove('active');
 });
 
-/* ---------- photo search (Unsplash / Pexels) ---------- */
+/* ---------- photo search ---------- */
 async function searchPhotos(query){
   const hint = document.getElementById('photoHint');
   const results = document.getElementById('results');
-  results.innerHTML = '';
-  hint.textContent = '';
+  results.innerHTML = ''; hint.textContent = '';
 
   if (TILE_CONFIG.unsplashKey){
     const res = await fetch(`https://api.unsplash.com/search/photos?query=${encodeURIComponent(query)}&per_page=9&client_id=${TILE_CONFIG.unsplashKey}`);
@@ -412,22 +356,17 @@ document.getElementById('searchBtn').addEventListener('click', () => {
   if (q) searchPhotos(q);
 });
 
-/* ---------- upload ---------- */
+/* ---------- upload (base64, local only) ---------- */
 document.getElementById('uploadBtn').addEventListener('click', () => document.getElementById('fileInput').click());
-document.getElementById('fileInput').addEventListener('change', async (e) => {
+document.getElementById('fileInput').addEventListener('change', (e) => {
   const file = e.target.files[0];
   if (!file) return;
-  const hint = document.getElementById('photoHint');
-  hint.textContent = 'Uploading…';
-
-  const path = `${user.id}/${crypto.randomUUID()}-${file.name}`;
-  const { error: upErr } = await sb.storage.from('tile-uploads').upload(path, file);
-  if (upErr){ hint.textContent = 'Upload failed — try a smaller image.'; return; }
-
-  const { data: pub } = sb.storage.from('tile-uploads').getPublicUrl(path);
-  await addTile({ type: 'image', content: { url: pub.publicUrl }, source: 'upload' });
-  hint.textContent = '';
-  closeSheet();
+  const reader = new FileReader();
+  reader.onload = () => {
+    addTile({ type: 'image', content: { url: reader.result }, source: 'upload' });
+    closeSheet();
+  };
+  reader.readAsDataURL(file);
 });
 
 /* ---------- quote tile ---------- */
