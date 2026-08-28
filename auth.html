@@ -7,33 +7,29 @@
 <meta name="theme-color" content="#070914">
 
 <!--
-  FOCYL — AUTH
+  FOCYL — AUTH (SHELL MODE)
   ────────────────────────────────────────────────────────────
-  Backend: Supabase (auth + the `profiles` table from
-  supabase/schema.sql). Fill in SUPABASE_URL and
-  SUPABASE_ANON_KEY below — both are safe to expose publicly,
-  Row Level Security is what actually protects the data.
+  No backend call here on purpose. This just writes to
+  localStorage so the whole app shell — auth → board — clicks
+  through in the browser with zero setup.
 
-  Get them from: Supabase dashboard → Project Settings → API.
+  localStorage.focyl_user   = the currently signed-in session
+  localStorage.focyl_users  = { email: {tier, sparksBalance} }
+                              so returning to the same email
+                              keeps its tier/Sparks locally.
 
-  What happens on sign-up:
-    1. supabase.auth.signUp() creates the auth user.
-    2. A Postgres trigger (see schema.sql) auto-inserts a row
-       into `profiles` with tier='spark', sparks_balance=100.
-    3. This page then reads that row straight back and shows it.
-
-  Nothing here talks to Stripe yet — tier changes are Stage 2.
-  When that's wired, "Upgrade" on pricing.html will redirect to
-  a Stripe Checkout URL, and a webhook flips `profiles.tier`.
-  This page just needs to keep reading `tier` from the same place.
+  SWAP IN REAL AUTH LATER: the Supabase pieces are still in the
+  repo (supabase/schema.sql, shared/config.js) untouched. When
+  you're ready, replace the two functions at the bottom —
+  localSignIn() / localSignUp() — with calls to
+  sb.auth.signInWithPassword() / sb.auth.signUp(), same as
+  before. Nothing else on this page needs to change.
   ────────────────────────────────────────────────────────────
 -->
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Sora:wght@400;500;600&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="shared/config.js"></script>
 
 <style>
   :root{
@@ -102,7 +98,6 @@
     border-radius:100px; padding:13px 0; font-weight:600; font-size:0.95rem;
     cursor:pointer; margin-bottom:12px;
   }
-  .btn-primary:disabled{ opacity:0.6; cursor:default; }
   .btn-link{
     width:100%; background:transparent; border:none; color:var(--mist);
     font-size:0.82rem; cursor:pointer; text-decoration:underline; padding:4px 0;
@@ -110,9 +105,7 @@
 
   .msg{ font-size:0.82rem; margin:0 0 14px; padding:10px 12px; border-radius:10px; }
   .msg.error{ background:rgba(234,79,80,0.12); color:#f18a8a; border:1px solid rgba(234,79,80,0.25); }
-  .msg.ok{ background:rgba(53,216,240,0.1); color:var(--cyan); border:1px solid rgba(53,216,240,0.25); }
 
-  /* logged-in state */
   .profile-row{ display:flex; justify-content:space-between; align-items:center; padding:14px 0; border-top:1px solid var(--line); }
   .profile-row:first-of-type{ border-top:none; margin-top:4px; }
   .profile-label{ font-family:var(--mono); font-size:0.7rem; text-transform:uppercase; letter-spacing:0.08em; color:var(--mist); }
@@ -121,7 +114,6 @@
     font-family:var(--mono); font-size:0.7rem; text-transform:uppercase; letter-spacing:0.08em;
     background:var(--grad); color:#070914; padding:4px 10px; border-radius:100px; font-weight:700;
   }
-
   .hidden{ display:none !important; }
 </style>
 </head>
@@ -147,7 +139,6 @@
     <circle cx="50" cy="50" r="6" fill="url(#g)"/>
   </svg>
 
-  <!-- ---------- LOGGED OUT ---------- -->
   <div id="authView">
     <h1 id="heading">Welcome back</h1>
     <p class="sub" id="subheading">Sign in to pick up your board.</p>
@@ -161,30 +152,16 @@
 
     <form id="authForm">
       <label for="email">Email</label>
-      <input id="email" type="email" autocomplete="email" required>
-
+      <input id="email" type="email" required>
       <label for="password">Password</label>
-      <input id="password" type="password" autocomplete="current-password" required minlength="6">
-
+      <input id="password" type="password" required minlength="4">
       <button type="submit" class="btn-primary" id="submitBtn">Sign in</button>
     </form>
-
-    <button class="btn-link" id="magicLinkBtn">Email me a sign-in link instead</button>
-
-    <!-- ═══ DEV ONLY — delete this whole block before you ship ═══ -->
-    <button class="btn-link" id="devToggle" style="opacity:0.5;">⚡ Dev skip (remove later)</button>
-    <div id="devPanel" class="hidden" style="margin-top:8px;">
-      <input id="devPassword" type="password" placeholder="admin password" autocomplete="off">
-      <button class="btn-primary" id="devSubmit" type="button" style="margin-bottom:0;">Skip sign-in</button>
-    </div>
-    <!-- ═══ END DEV BLOCK ═══ -->
   </div>
 
-  <!-- ---------- LOGGED IN ---------- -->
   <div id="profileView" class="hidden">
     <h1>You're in.</h1>
     <p class="sub" id="profileEmail"></p>
-
     <div class="profile-row">
       <span class="profile-label">Plan</span>
       <span class="tier-pill" id="profileTier">Spark</span>
@@ -193,7 +170,6 @@
       <span class="profile-label">Sparks</span>
       <span class="profile-value" id="profileSparks">100</span>
     </div>
-
     <button class="btn-primary" style="margin-top:20px;" id="goBoardBtn">Go to Board →</button>
     <button class="btn-link" id="signOutBtn">Sign out</button>
   </div>
@@ -212,7 +188,6 @@ const els = {
   password: document.getElementById('password'),
   submitBtn: document.getElementById('submitBtn'),
   msgSlot: document.getElementById('msgSlot'),
-  magicLinkBtn: document.getElementById('magicLinkBtn'),
   profileEmail: document.getElementById('profileEmail'),
   profileTier: document.getElementById('profileTier'),
   profileSparks: document.getElementById('profileSparks'),
@@ -220,132 +195,62 @@ const els = {
   signOutBtn: document.getElementById('signOutBtn'),
 };
 
-/* ═══ DEV ONLY — delete this whole block before you ship ═══
-   This does NOT bypass Supabase auth — it still needs one real,
-   email-confirmed account. It just skips retyping credentials.
-
-   Steps to use it:
-     1. Sign up once for real, above, with an email you control.
-     2. Confirm it from your inbox.
-     3. Paste that email + password into DEV_EMAIL / DEV_PASSWORD
-        below, and pick any DEV_ADMIN_PASSWORD you'll remember.
-     4. On this page, tap "Dev skip", enter DEV_ADMIN_PASSWORD,
-        and it signs in as that account.
-*/
-const DEV_EMAIL = 'you@example.com';
-const DEV_PASSWORD = 'change-me';
-const DEV_ADMIN_PASSWORD = 'focyl-dev';
-
-const devToggle = document.getElementById('devToggle');
-const devPanel = document.getElementById('devPanel');
-const devPasswordInput = document.getElementById('devPassword');
-const devSubmit = document.getElementById('devSubmit');
-
-devToggle.addEventListener('click', () => devPanel.classList.toggle('hidden'));
-
-devSubmit.addEventListener('click', async () => {
-  if (devPasswordInput.value !== DEV_ADMIN_PASSWORD){
-    showMsg('Wrong dev password.', 'error');
-    return;
-  }
-  els.email.value = DEV_EMAIL;
-  els.password.value = DEV_PASSWORD;
-  mode = 'in';
-  els.form.requestSubmit();
-});
-/* ═══ END DEV BLOCK ═══ */
-
-let mode = 'in'; // 'in' | 'up'
-
+let mode = 'in';
 function setMode(next){
   mode = next;
   els.tabIn.classList.toggle('active', mode === 'in');
   els.tabUp.classList.toggle('active', mode === 'up');
   els.heading.textContent = mode === 'in' ? 'Welcome back' : 'Start your board';
-  els.subheading.textContent = mode === 'in'
-    ? 'Sign in to pick up your board.'
-    : 'Free on Spark — no card needed.';
+  els.subheading.textContent = mode === 'in' ? 'Sign in to pick up your board.' : 'Free on Spark — no card needed.';
   els.submitBtn.textContent = mode === 'in' ? 'Sign in' : 'Create account';
-  els.password.autocomplete = mode === 'in' ? 'current-password' : 'new-password';
   els.msgSlot.innerHTML = '';
 }
 els.tabIn.addEventListener('click', () => setMode('in'));
 els.tabUp.addEventListener('click', () => setMode('up'));
 
-function showMsg(text, kind){
-  els.msgSlot.innerHTML = `<p class="msg ${kind}">${text}</p>`;
-}
+function showMsg(text){ els.msgSlot.innerHTML = `<p class="msg error">${text}</p>`; }
 
-els.form.addEventListener('submit', async (e) => {
+function getUsers(){ return JSON.parse(localStorage.getItem('focyl_users') || '{}'); }
+function saveUsers(u){ localStorage.setItem('focyl_users', JSON.stringify(u)); }
+
+els.form.addEventListener('submit', (e) => {
   e.preventDefault();
-  els.submitBtn.disabled = true;
-  els.msgSlot.innerHTML = '';
+  const email = els.email.value.trim().toLowerCase();
+  if (!email){ showMsg('Enter an email.'); return; }
 
-  const email = els.email.value.trim();
-  const password = els.password.value;
+  const users = getUsers();
 
-  const { data, error } = mode === 'in'
-    ? await sb.auth.signInWithPassword({ email, password })
-    : await sb.auth.signUp({ email, password });
-
-  els.submitBtn.disabled = false;
-
-  if (error){ showMsg(error.message, 'error'); return; }
-
-  if (mode === 'up' && !data.session){
-    // email confirmation is on by default in Supabase
-    showMsg('Check your email to confirm the account.', 'ok');
-    return;
+  if (mode === 'up'){
+    if (users[email]){ showMsg('That email already has an account — sign in instead.'); return; }
+    users[email] = { tier: 'spark', sparksBalance: 100 };
+    saveUsers(users);
+  } else {
+    if (!users[email]){ showMsg('No account with that email — create one instead.'); return; }
   }
 
-  await loadProfile();
+  localStorage.setItem('focyl_user', JSON.stringify({ email, ...users[email] }));
+  showProfile();
 });
 
-els.magicLinkBtn.addEventListener('click', async () => {
-  const email = els.email.value.trim();
-  if (!email){ showMsg('Enter your email above first.', 'error'); return; }
-  const { error } = await sb.auth.signInWithOtp({ email });
-  if (error){ showMsg(error.message, 'error'); return; }
-  showMsg('Sign-in link sent — check your email.', 'ok');
-});
+function showProfile(){
+  const session = JSON.parse(localStorage.getItem('focyl_user') || 'null');
+  if (!session) return;
+  els.profileEmail.textContent = session.email;
+  els.profileTier.textContent = session.tier;
+  els.profileSparks.textContent = session.sparksBalance;
+  els.authView.classList.add('hidden');
+  els.profileView.classList.remove('hidden');
+}
 
-els.signOutBtn.addEventListener('click', async () => {
-  await sb.auth.signOut();
+els.goBoardBtn.addEventListener('click', () => window.location.href = 'board.html');
+els.signOutBtn.addEventListener('click', () => {
+  localStorage.removeItem('focyl_user');
   els.profileView.classList.add('hidden');
   els.authView.classList.remove('hidden');
   setMode('in');
 });
 
-els.goBoardBtn.addEventListener('click', () => {
-  window.location.href = 'board.html'; // not built yet — next in the build order
-});
-
-// `profiles` is auto-created by the Postgres trigger in schema.sql the
-// instant auth.users gets a new row, so this select just works.
-async function loadProfile(){
-  const { data: { user } } = await sb.auth.getUser();
-  if (!user) return;
-
-  const { data: profile, error } = await sb
-    .from('profiles')
-    .select('tier, sparks_balance')
-    .eq('id', user.id)
-    .single();
-
-  if (error){ showMsg('Signed in, but the profile row failed to load.', 'error'); return; }
-
-  els.profileEmail.textContent = user.email;
-  els.profileTier.textContent = profile.tier;
-  els.profileSparks.textContent = profile.sparks_balance;
-
-  els.authView.classList.add('hidden');
-  els.profileView.classList.remove('hidden');
-}
-
-// resume session on reload / after a magic-link redirect
-sb.auth.getSession().then(({ data: { session } }) => {
-  if (session) loadProfile();
-});
+if (localStorage.getItem('focyl_user')) showProfile();
 </script>
 </body>
 </html>
