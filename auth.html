@@ -1,125 +1,236 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Focyl — Sign in</title>
-<meta name="theme-color" content="#070914">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Focyl — Sign in</title>
+  <meta name="theme-color" content="#070914">
 
-<!--
-  FOCYL — AUTH (SHELL MODE)
-  ────────────────────────────────────────────────────────────
-  No backend call here on purpose. This just writes to
-  localStorage so the whole app shell — auth → board — clicks
-  through in the browser with zero setup.
+  <!-- Link to manifest (PWA) – optional for now -->
+  <link rel="manifest" href="/manifest.json">
 
-  localStorage.focyl_user   = the currently signed-in session
-  localStorage.focyl_users  = { email: {tier, sparksBalance} }
-                              so returning to the same email
-                              keeps its tier/Sparks locally.
+  <!-- Supabase JS -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
-  SWAP IN REAL AUTH LATER: the Supabase pieces are still in the
-  repo (supabase/schema.sql, shared/config.js) untouched. When
-  you're ready, replace the two functions at the bottom —
-  localSignIn() / localSignUp() — with calls to
-  sb.auth.signInWithPassword() / sb.auth.signUp(), same as
-  before. Nothing else on this page needs to change.
-  ────────────────────────────────────────────────────────────
--->
+  <!-- Google Fonts (same as before) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Sora:wght@400;500;600&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
 
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Sora:wght@400;500;600&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --void: #070914;
+      --ink: #0d1224;
+      --ink-2: #121a34;
+      --line: rgba(237,239,247,0.09);
+      --paper: #EDEFF7;
+      --mist: #9AA4C7;
+      --cyan: #35D8F0;
+      --violet: #8B7CF6;
+      --magenta: #EA4FC9;
+      --grad: linear-gradient(135deg, var(--cyan), var(--violet) 55%, var(--magenta));
+      --display: 'Space Grotesk', sans-serif;
+      --body: 'Sora', sans-serif;
+      --mono: 'Space Mono', monospace;
+      --radius: 22px;
+    }
+    * { box-sizing: border-box; }
+    html { -webkit-tap-highlight-color: transparent; }
+    body {
+      margin: 0;
+      min-height: 100dvh;
+      background: var(--void);
+      color: var(--paper);
+      font-family: var(--body);
+      line-height: 1.5;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
+    body::before, body::after {
+      content: "";
+      position: fixed;
+      width: 60vmax;
+      height: 60vmax;
+      border-radius: 50%;
+      filter: blur(90px);
+      opacity: 0.16;
+      z-index: 0;
+      pointer-events: none;
+    }
+    body::before { top: -20vmax; left: -15vmax; background: var(--cyan); }
+    body::after { bottom: -25vmax; right: -20vmax; background: var(--magenta); }
 
-<style>
-  :root{
-    --void:#070914; --ink:#0d1224; --ink-2:#121a34;
-    --line:rgba(237,239,247,0.09);
-    --paper:#EDEFF7; --mist:#9AA4C7;
-    --cyan:#35D8F0; --violet:#8B7CF6; --magenta:#EA4FC9;
-    --grad: linear-gradient(135deg, var(--cyan), var(--violet) 55%, var(--magenta));
-    --display:'Space Grotesk', sans-serif;
-    --body:'Sora', sans-serif;
-    --mono:'Space Mono', monospace;
-    --radius:22px;
-  }
-  *{box-sizing:border-box;}
-  html{-webkit-tap-highlight-color:transparent;}
-  body{
-    margin:0; min-height:100dvh;
-    background:var(--void); color:var(--paper);
-    font-family:var(--body); line-height:1.5;
-    display:flex; align-items:center; justify-content:center;
-    padding:24px;
-  }
-  body::before, body::after{
-    content:""; position:fixed; width:60vmax; height:60vmax;
-    border-radius:50%; filter:blur(90px); opacity:0.16; z-index:0; pointer-events:none;
-  }
-  body::before{ top:-20vmax; left:-15vmax; background:var(--cyan); }
-  body::after{ bottom:-25vmax; right:-20vmax; background:var(--magenta); }
+    .card {
+      position: relative;
+      z-index: 1;
+      width: 100%;
+      max-width: 380px;
+      background: radial-gradient(120% 140% at 0% 0%, rgba(255,255,255,0.05), transparent 60%), var(--ink);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: 30px 26px;
+      box-shadow: 0 18px 40px -22px rgba(0,0,0,0.7);
+    }
 
-  .card{
-    position:relative; z-index:1;
-    width:100%; max-width:380px;
-    background: radial-gradient(120% 140% at 0% 0%, rgba(255,255,255,0.05), transparent 60%), var(--ink);
-    border:1px solid var(--line);
-    border-radius: var(--radius);
-    padding: 30px 26px;
-    box-shadow: 0 18px 40px -22px rgba(0,0,0,0.7);
-  }
+    .mark { width: 36px; height: 36px; margin-bottom: 18px; }
 
-  .mark{ width:36px; height:36px; margin-bottom:18px; }
+    h1 {
+      font-family: var(--display);
+      font-weight: 700;
+      font-size: 1.5rem;
+      margin: 0 0 6px;
+      letter-spacing: -0.01em;
+    }
+    .sub {
+      color: var(--mist);
+      font-size: 0.88rem;
+      margin: 0 0 24px;
+    }
 
-  h1{
-    font-family:var(--display); font-weight:700;
-    font-size:1.5rem; margin:0 0 6px; letter-spacing:-0.01em;
-  }
-  .sub{ color:var(--mist); font-size:0.88rem; margin:0 0 24px; }
+    .tabs {
+      display: flex;
+      gap: 6px;
+      margin-bottom: 20px;
+      background: var(--ink-2);
+      border-radius: 100px;
+      padding: 4px;
+    }
+    .tab {
+      flex: 1;
+      text-align: center;
+      padding: 9px 0;
+      border-radius: 100px;
+      font-size: 0.82rem;
+      font-weight: 600;
+      cursor: pointer;
+      color: var(--mist);
+      border: none;
+      background: transparent;
+      font-family: inherit;
+    }
+    .tab.active {
+      background: var(--grad);
+      color: #070914;
+    }
 
-  .tabs{ display:flex; gap:6px; margin-bottom:20px; background:var(--ink-2); border-radius:100px; padding:4px; }
-  .tab{
-    flex:1; text-align:center; padding:9px 0; border-radius:100px;
-    font-size:0.82rem; font-weight:600; cursor:pointer; color:var(--mist);
-    border:none; background:transparent; font-family:inherit;
-  }
-  .tab.active{ background:var(--grad); color:#070914; }
+    label {
+      display: block;
+      font-family: var(--mono);
+      font-size: 0.7rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--mist);
+      margin: 0 0 6px;
+    }
+    input {
+      width: 100%;
+      background: var(--ink-2);
+      border: 1px solid var(--line);
+      color: var(--paper);
+      border-radius: 12px;
+      padding: 12px 14px;
+      font-family: var(--body);
+      font-size: 0.95rem;
+      margin-bottom: 14px;
+    }
+    input:focus { outline: 2px solid var(--cyan); outline-offset: 1px; }
 
-  label{ display:block; font-family:var(--mono); font-size:0.7rem; text-transform:uppercase; letter-spacing:0.08em; color:var(--mist); margin:0 0 6px; }
-  input{
-    width:100%; background:var(--ink-2); border:1px solid var(--line);
-    color:var(--paper); border-radius:12px; padding:12px 14px;
-    font-family:var(--body); font-size:0.95rem; margin-bottom:14px;
-  }
-  input:focus{ outline:2px solid var(--cyan); outline-offset:1px; }
+    .btn-primary {
+      width: 100%;
+      background: var(--grad);
+      color: #070914;
+      border: none;
+      border-radius: 100px;
+      padding: 13px 0;
+      font-weight: 600;
+      font-size: 0.95rem;
+      cursor: pointer;
+      margin-bottom: 12px;
+    }
+    .btn-link {
+      width: 100%;
+      background: transparent;
+      border: none;
+      color: var(--mist);
+      font-size: 0.82rem;
+      cursor: pointer;
+      text-decoration: underline;
+      padding: 4px 0;
+    }
+    .btn-bypass {
+      width: 100%;
+      background: transparent;
+      border: 1px dashed var(--violet);
+      color: var(--violet);
+      border-radius: 100px;
+      padding: 10px 0;
+      font-weight: 600;
+      font-size: 0.85rem;
+      cursor: pointer;
+      margin-top: 6px;
+      font-family: inherit;
+    }
+    .btn-bypass:hover {
+      background: rgba(139,124,246,0.1);
+    }
 
-  .btn-primary{
-    width:100%; background:var(--grad); color:#070914; border:none;
-    border-radius:100px; padding:13px 0; font-weight:600; font-size:0.95rem;
-    cursor:pointer; margin-bottom:12px;
-  }
-  .btn-link{
-    width:100%; background:transparent; border:none; color:var(--mist);
-    font-size:0.82rem; cursor:pointer; text-decoration:underline; padding:4px 0;
-  }
+    .msg {
+      font-size: 0.82rem;
+      margin: 0 0 14px;
+      padding: 10px 12px;
+      border-radius: 10px;
+    }
+    .msg.error {
+      background: rgba(234,79,80,0.12);
+      color: #f18a8a;
+      border: 1px solid rgba(234,79,80,0.25);
+    }
+    .msg.success {
+      background: rgba(53,216,240,0.12);
+      color: #7ae0f0;
+      border: 1px solid rgba(53,216,240,0.25);
+    }
 
-  .msg{ font-size:0.82rem; margin:0 0 14px; padding:10px 12px; border-radius:10px; }
-  .msg.error{ background:rgba(234,79,80,0.12); color:#f18a8a; border:1px solid rgba(234,79,80,0.25); }
-
-  .profile-row{ display:flex; justify-content:space-between; align-items:center; padding:14px 0; border-top:1px solid var(--line); }
-  .profile-row:first-of-type{ border-top:none; margin-top:4px; }
-  .profile-label{ font-family:var(--mono); font-size:0.7rem; text-transform:uppercase; letter-spacing:0.08em; color:var(--mist); }
-  .profile-value{ font-family:var(--mono); font-weight:700; font-size:0.95rem; }
-  .tier-pill{
-    font-family:var(--mono); font-size:0.7rem; text-transform:uppercase; letter-spacing:0.08em;
-    background:var(--grad); color:#070914; padding:4px 10px; border-radius:100px; font-weight:700;
-  }
-  .hidden{ display:none !important; }
-</style>
+    .profile-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 14px 0;
+      border-top: 1px solid var(--line);
+    }
+    .profile-row:first-of-type { border-top: none; margin-top: 4px; }
+    .profile-label {
+      font-family: var(--mono);
+      font-size: 0.7rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--mist);
+    }
+    .profile-value {
+      font-family: var(--mono);
+      font-weight: 700;
+      font-size: 0.95rem;
+    }
+    .tier-pill {
+      font-family: var(--mono);
+      font-size: 0.7rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      background: var(--grad);
+      color: #070914;
+      padding: 4px 10px;
+      border-radius: 100px;
+      font-weight: 700;
+    }
+    .hidden { display: none !important; }
+  </style>
 </head>
 <body>
 
 <div class="card">
+  <!-- Logo (iris) – same as before -->
   <svg viewBox="0 0 100 100" class="mark" aria-hidden="true">
     <defs>
       <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
@@ -139,6 +250,7 @@
     <circle cx="50" cy="50" r="6" fill="url(#g)"/>
   </svg>
 
+  <!-- AUTH VIEW -->
   <div id="authView">
     <h1 id="heading">Welcome back</h1>
     <p class="sub" id="subheading">Sign in to pick up your board.</p>
@@ -154,11 +266,15 @@
       <label for="email">Email</label>
       <input id="email" type="email" required>
       <label for="password">Password</label>
-      <input id="password" type="password" required minlength="4">
+      <input id="password" type="password" required minlength="6">
       <button type="submit" class="btn-primary" id="submitBtn">Sign in</button>
     </form>
+
+    <!-- BYPASS BUTTON (for development – remove later) -->
+    <button class="btn-bypass" id="bypassBtn">🚀 Bypass (test login)</button>
   </div>
 
+  <!-- PROFILE VIEW (shown after sign-in) -->
   <div id="profileView" class="hidden">
     <h1>You're in.</h1>
     <p class="sub" id="profileEmail"></p>
@@ -176,81 +292,248 @@
 </div>
 
 <script>
-const els = {
-  authView: document.getElementById('authView'),
-  profileView: document.getElementById('profileView'),
-  heading: document.getElementById('heading'),
-  subheading: document.getElementById('subheading'),
-  tabIn: document.getElementById('tabIn'),
-  tabUp: document.getElementById('tabUp'),
-  form: document.getElementById('authForm'),
-  email: document.getElementById('email'),
-  password: document.getElementById('password'),
-  submitBtn: document.getElementById('submitBtn'),
-  msgSlot: document.getElementById('msgSlot'),
-  profileEmail: document.getElementById('profileEmail'),
-  profileTier: document.getElementById('profileTier'),
-  profileSparks: document.getElementById('profileSparks'),
-  goBoardBtn: document.getElementById('goBoardBtn'),
-  signOutBtn: document.getElementById('signOutBtn'),
-};
+  // ------------------------------------------------------------
+  //  SUPABASE CONFIG – REPLACE WITH YOUR ACTUAL KEY
+  // ------------------------------------------------------------
+  const SUPABASE_URL = 'https://ufkgmldvclvkzvznsxbs.supabase.co';
+  const SUPABASE_ANON_KEY = 'YOUR_SUPABASE_ANON_KEY'; // <-- PASTE YOUR KEY HERE
+  const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-let mode = 'in';
-function setMode(next){
-  mode = next;
-  els.tabIn.classList.toggle('active', mode === 'in');
-  els.tabUp.classList.toggle('active', mode === 'up');
-  els.heading.textContent = mode === 'in' ? 'Welcome back' : 'Start your board';
-  els.subheading.textContent = mode === 'in' ? 'Sign in to pick up your board.' : 'Free on Spark — no card needed.';
-  els.submitBtn.textContent = mode === 'in' ? 'Sign in' : 'Create account';
-  els.msgSlot.innerHTML = '';
-}
-els.tabIn.addEventListener('click', () => setMode('in'));
-els.tabUp.addEventListener('click', () => setMode('up'));
+  // ------------------------------------------------------------
+  //  DOM REFERENCES
+  // ------------------------------------------------------------
+  const els = {
+    authView: document.getElementById('authView'),
+    profileView: document.getElementById('profileView'),
+    heading: document.getElementById('heading'),
+    subheading: document.getElementById('subheading'),
+    tabIn: document.getElementById('tabIn'),
+    tabUp: document.getElementById('tabUp'),
+    form: document.getElementById('authForm'),
+    email: document.getElementById('email'),
+    password: document.getElementById('password'),
+    submitBtn: document.getElementById('submitBtn'),
+    msgSlot: document.getElementById('msgSlot'),
+    profileEmail: document.getElementById('profileEmail'),
+    profileTier: document.getElementById('profileTier'),
+    profileSparks: document.getElementById('profileSparks'),
+    goBoardBtn: document.getElementById('goBoardBtn'),
+    signOutBtn: document.getElementById('signOutBtn'),
+    bypassBtn: document.getElementById('bypassBtn'),
+  };
 
-function showMsg(text){ els.msgSlot.innerHTML = `<p class="msg error">${text}</p>`; }
+  // ------------------------------------------------------------
+  //  MODE TOGGLE (Sign in / Create account)
+  // ------------------------------------------------------------
+  let mode = 'in'; // 'in' or 'up'
 
-function getUsers(){ return JSON.parse(localStorage.getItem('focyl_users') || '{}'); }
-function saveUsers(u){ localStorage.setItem('focyl_users', JSON.stringify(u)); }
-
-els.form.addEventListener('submit', (e) => {
-  e.preventDefault();
-  const email = els.email.value.trim().toLowerCase();
-  if (!email){ showMsg('Enter an email.'); return; }
-
-  const users = getUsers();
-
-  if (mode === 'up'){
-    if (users[email]){ showMsg('That email already has an account — sign in instead.'); return; }
-    users[email] = { tier: 'spark', sparksBalance: 100 };
-    saveUsers(users);
-  } else {
-    if (!users[email]){ showMsg('No account with that email — create one instead.'); return; }
+  function setMode(next) {
+    mode = next;
+    els.tabIn.classList.toggle('active', mode === 'in');
+    els.tabUp.classList.toggle('active', mode === 'up');
+    els.heading.textContent = mode === 'in' ? 'Welcome back' : 'Start your board';
+    els.subheading.textContent = mode === 'in' ? 'Sign in to pick up your board.' : 'Free on Spark — no card needed.';
+    els.submitBtn.textContent = mode === 'in' ? 'Sign in' : 'Create account';
+    clearMsg();
   }
 
-  localStorage.setItem('focyl_user', JSON.stringify({ email, ...users[email] }));
-  showProfile();
-});
+  els.tabIn.addEventListener('click', () => setMode('in'));
+  els.tabUp.addEventListener('click', () => setMode('up'));
 
-function showProfile(){
-  const session = JSON.parse(localStorage.getItem('focyl_user') || 'null');
-  if (!session) return;
-  els.profileEmail.textContent = session.email;
-  els.profileTier.textContent = session.tier;
-  els.profileSparks.textContent = session.sparksBalance;
-  els.authView.classList.add('hidden');
-  els.profileView.classList.remove('hidden');
-}
+  // ------------------------------------------------------------
+  //  MESSAGE HELPER
+  // ------------------------------------------------------------
+  function showMsg(text, type = 'error') {
+    els.msgSlot.innerHTML = `<p class="msg ${type}">${text}</p>`;
+  }
+  function clearMsg() {
+    els.msgSlot.innerHTML = '';
+  }
 
-els.goBoardBtn.addEventListener('click', () => window.location.href = 'board.html');
-els.signOutBtn.addEventListener('click', () => {
-  localStorage.removeItem('focyl_user');
-  els.profileView.classList.add('hidden');
-  els.authView.classList.remove('hidden');
-  setMode('in');
-});
+  // ------------------------------------------------------------
+  //  FORM SUBMIT (Sign in / Sign up)
+  // ------------------------------------------------------------
+  els.form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    clearMsg();
 
-if (localStorage.getItem('focyl_user')) showProfile();
+    const email = els.email.value.trim();
+    const password = els.password.value;
+
+    if (!email || !password) {
+      showMsg('Please fill in all fields.');
+      return;
+    }
+
+    try {
+      let result;
+      if (mode === 'up') {
+        // Sign up
+        result = await sb.auth.signUp({ email, password });
+        if (result.error) throw result.error;
+        // Check if email confirmation is required; if so, tell user
+        if (result.data.user && !result.data.user.confirmed_at) {
+          showMsg('Account created! Please check your email to confirm your address, then sign in.', 'success');
+          return;
+        }
+        // If already confirmed (or disabled), proceed to sign in automatically
+        // We'll just switch to sign-in mode with a message
+        setMode('in');
+        showMsg('Account created! You can now sign in.', 'success');
+        return;
+      } else {
+        // Sign in
+        result = await sb.auth.signInWithPassword({ email, password });
+        if (result.error) throw result.error;
+        // Success – fetch profile and store session
+        const user = result.data.user;
+        await handleSuccessfulLogin(user);
+      }
+    } catch (err) {
+      showMsg(err.message);
+    }
+  });
+
+  // ------------------------------------------------------------
+  //  AFTER SUCCESSFUL LOGIN
+  // ------------------------------------------------------------
+  async function handleSuccessfulLogin(user) {
+    // Fetch profile from your 'profiles' table
+    const { data: profile, error: profileError } = await sb
+      .from('profiles')
+      .select('*')
+      .eq('id', user.id)
+      .single();
+
+    // If no profile exists, create one with default values
+    if (profileError && profileError.code === 'PGRST116') {
+      // Insert a default profile
+      const { data: newProfile, error: insertError } = await sb
+        .from('profiles')
+        .insert([{
+          id: user.id,
+          email: user.email,
+          tier: 'spark',
+          sparks_balance: 100,
+        }])
+        .select()
+        .single();
+      if (insertError) {
+        console.warn('Could not create profile:', insertError);
+        // Still proceed with default values
+        storeSession(user, { tier: 'spark', sparks_balance: 100 });
+        showProfile();
+        return;
+      }
+      storeSession(user, newProfile);
+      showProfile();
+      return;
+    }
+
+    if (profileError) {
+      console.error('Profile fetch error:', profileError);
+      // Fallback: use defaults
+      storeSession(user, { tier: 'spark', sparks_balance: 100 });
+      showProfile();
+      return;
+    }
+
+    storeSession(user, profile);
+    showProfile();
+  }
+
+  function storeSession(user, profile) {
+    localStorage.setItem('focyl_user', JSON.stringify({
+      id: user.id,
+      email: user.email,
+      tier: profile.tier || 'spark',
+      sparksBalance: profile.sparks_balance || 100,
+    }));
+  }
+
+  // ------------------------------------------------------------
+  //  SHOW PROFILE VIEW
+  // ------------------------------------------------------------
+  function showProfile() {
+    const session = JSON.parse(localStorage.getItem('focyl_user') || 'null');
+    if (!session) return;
+    els.profileEmail.textContent = session.email;
+    els.profileTier.textContent = session.tier;
+    els.profileSparks.textContent = session.sparksBalance;
+    els.authView.classList.add('hidden');
+    els.profileView.classList.remove('hidden');
+  }
+
+  // ------------------------------------------------------------
+  //  SIGN OUT
+  // ------------------------------------------------------------
+  els.signOutBtn.addEventListener('click', async () => {
+    await sb.auth.signOut();
+    localStorage.removeItem('focyl_user');
+    els.profileView.classList.add('hidden');
+    els.authView.classList.remove('hidden');
+    setMode('in');
+    clearMsg();
+  });
+
+  // ------------------------------------------------------------
+  //  GO TO BOARD
+  // ------------------------------------------------------------
+  els.goBoardBtn.addEventListener('click', () => {
+    window.location.href = 'board.html';
+  });
+
+  // ------------------------------------------------------------
+  //  BYPASS BUTTON – for development
+  //  Creates a fake session so you can skip auth entirely.
+  //  Remove this button when you're done testing.
+  // ------------------------------------------------------------
+  els.bypassBtn.addEventListener('click', () => {
+    // Create a fake user with a fixed ID (you can change it)
+    const fakeUser = {
+      id: '00000000-0000-0000-0000-000000000000',
+      email: 'bypass@focyl.app',
+    };
+    const fakeProfile = {
+      tier: 'spark',
+      sparks_balance: 999,
+    };
+    storeSession(fakeUser, fakeProfile);
+    showProfile();
+    showMsg('Bypass mode – you are logged in as a test user.', 'success');
+  });
+
+  // ------------------------------------------------------------
+  //  CHECK EXISTING SESSION ON LOAD
+  // ------------------------------------------------------------
+  (async function init() {
+    // 1. Check if we already have a session in localStorage
+    const stored = localStorage.getItem('focyl_user');
+    if (stored) {
+      // Validate with Supabase? For simplicity, just show profile.
+      // But we should verify the token is still valid.
+      const { data: { session } } = await sb.auth.getSession();
+      if (session) {
+        // Session exists – fetch fresh profile
+        const user = session.user;
+        const { data: profile } = await sb
+          .from('profiles')
+          .select('*')
+          .eq('id', user.id)
+          .single();
+        storeSession(user, profile || { tier: 'spark', sparks_balance: 100 });
+        showProfile();
+        return;
+      } else {
+        // Session expired – clear local storage
+        localStorage.removeItem('focyl_user');
+      }
+    }
+
+    // 2. If no valid session, show auth view
+    // (but we already show it by default)
+  })();
+
 </script>
 </body>
 </html>
