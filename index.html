@@ -394,7 +394,7 @@
     </svg>
     Focyl
   </div>
-  <button class="nav-cta">Sign in</button>
+  <button class="nav-cta" onclick="window.location.href='auth.html'">Sign in</button>
 </header>
 
 <main>
@@ -422,8 +422,9 @@
     <h1>Your future,<br><span class="grad">in focus.</span></h1>
     <p class="lede">Describe where you're going. Focyl converges it into one image, then puts it where you'll actually see it — on your phone, printed on your wall, or live on a screen that reacts to your progress.</p>
     <div class="cta-row">
-      <button class="btn-primary">Start a board</button>
-      <button class="btn-ghost">See Film →</button>
+      <button class="btn-primary" onclick="window.location.href='auth.html'">Start a board</button>
+      <!-- "See Film" intentionally does nothing yet — film.html isn't built (Stage 4). Wire it then, not before. -->
+      <button class="btn-ghost" disabled style="opacity:0.4; cursor:default;">See Film → (coming soon)</button>
     </div>
   </section>
 
