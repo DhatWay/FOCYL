@@ -170,6 +170,14 @@
     </form>
 
     <button class="btn-link" id="magicLinkBtn">Email me a sign-in link instead</button>
+
+    <!-- ═══ DEV ONLY — delete this whole block before you ship ═══ -->
+    <button class="btn-link" id="devToggle" style="opacity:0.5;">⚡ Dev skip (remove later)</button>
+    <div id="devPanel" class="hidden" style="margin-top:8px;">
+      <input id="devPassword" type="password" placeholder="admin password" autocomplete="off">
+      <button class="btn-primary" id="devSubmit" type="button" style="margin-bottom:0;">Skip sign-in</button>
+    </div>
+    <!-- ═══ END DEV BLOCK ═══ -->
   </div>
 
   <!-- ---------- LOGGED IN ---------- -->
@@ -211,6 +219,41 @@ const els = {
   goBoardBtn: document.getElementById('goBoardBtn'),
   signOutBtn: document.getElementById('signOutBtn'),
 };
+
+/* ═══ DEV ONLY — delete this whole block before you ship ═══
+   This does NOT bypass Supabase auth — it still needs one real,
+   email-confirmed account. It just skips retyping credentials.
+
+   Steps to use it:
+     1. Sign up once for real, above, with an email you control.
+     2. Confirm it from your inbox.
+     3. Paste that email + password into DEV_EMAIL / DEV_PASSWORD
+        below, and pick any DEV_ADMIN_PASSWORD you'll remember.
+     4. On this page, tap "Dev skip", enter DEV_ADMIN_PASSWORD,
+        and it signs in as that account.
+*/
+const DEV_EMAIL = 'you@example.com';
+const DEV_PASSWORD = 'change-me';
+const DEV_ADMIN_PASSWORD = 'focyl-dev';
+
+const devToggle = document.getElementById('devToggle');
+const devPanel = document.getElementById('devPanel');
+const devPasswordInput = document.getElementById('devPassword');
+const devSubmit = document.getElementById('devSubmit');
+
+devToggle.addEventListener('click', () => devPanel.classList.toggle('hidden'));
+
+devSubmit.addEventListener('click', async () => {
+  if (devPasswordInput.value !== DEV_ADMIN_PASSWORD){
+    showMsg('Wrong dev password.', 'error');
+    return;
+  }
+  els.email.value = DEV_EMAIL;
+  els.password.value = DEV_PASSWORD;
+  mode = 'in';
+  els.form.requestSubmit();
+});
+/* ═══ END DEV BLOCK ═══ */
 
 let mode = 'in'; // 'in' | 'up'
 
