@@ -1,6 +1,6 @@
 {
   "library": "templates",
-  "version": 1,
+  "version": 2,
   "updated": "2026-08-29",
   "categories": [
     "grid",
@@ -11,5 +11,208 @@
     "yearly",
     "quarterly"
   ],
-  "items": []
+  "items": [
+    {
+      "id": "quadrant-life",
+      "name": "Four Quadrants",
+      "category": "quadrant",
+      "tier": "free",
+      "thumb": null,
+      "canvas": {
+        "width": 1600,
+        "height": 1600,
+        "canvas_id": "void"
+      },
+      "tiles": [
+        {
+          "id": "q1",
+          "type": "text",
+          "x": 120,
+          "y": 120,
+          "w": 560,
+          "h": 80,
+          "z": 1,
+          "rotation": 0,
+          "content": {
+            "text": "Health",
+            "fontSize": 44,
+            "fontFamily": "'Space Grotesk', sans-serif",
+            "color": "#35D8F0"
+          }
+        },
+        {
+          "id": "q2",
+          "type": "text",
+          "x": 900,
+          "y": 120,
+          "w": 560,
+          "h": 80,
+          "z": 1,
+          "rotation": 0,
+          "content": {
+            "text": "Wealth",
+            "fontSize": 44,
+            "fontFamily": "'Space Grotesk', sans-serif",
+            "color": "#F5B942"
+          }
+        },
+        {
+          "id": "q3",
+          "type": "text",
+          "x": 120,
+          "y": 860,
+          "w": 560,
+          "h": 80,
+          "z": 1,
+          "rotation": 0,
+          "content": {
+            "text": "Relationships",
+            "fontSize": 44,
+            "fontFamily": "'Space Grotesk', sans-serif",
+            "color": "#EA4FC9"
+          }
+        },
+        {
+          "id": "q4",
+          "type": "text",
+          "x": 900,
+          "y": 860,
+          "w": 560,
+          "h": 80,
+          "z": 1,
+          "rotation": 0,
+          "content": {
+            "text": "Craft",
+            "fontSize": 44,
+            "fontFamily": "'Space Grotesk', sans-serif",
+            "color": "#8B7CF6"
+          }
+        }
+      ]
+    },
+    {
+      "id": "single-focus",
+      "name": "One Goal",
+      "category": "single-focus",
+      "tier": "free",
+      "thumb": null,
+      "canvas": {
+        "width": 1200,
+        "height": 1600,
+        "canvas_id": "void"
+      },
+      "tiles": [
+        {
+          "id": "h",
+          "type": "text",
+          "x": 140,
+          "y": 140,
+          "w": 920,
+          "h": 120,
+          "z": 1,
+          "rotation": 0,
+          "content": {
+            "text": "The one thing",
+            "fontSize": 64,
+            "fontFamily": "'Playfair Display', serif",
+            "color": "#EDEFF7"
+          }
+        },
+        {
+          "id": "s",
+          "type": "text",
+          "x": 140,
+          "y": 300,
+          "w": 920,
+          "h": 70,
+          "z": 1,
+          "rotation": 0,
+          "content": {
+            "text": "By December",
+            "fontSize": 30,
+            "fontFamily": "'Sora', sans-serif",
+            "color": "#9AA4C7"
+          }
+        }
+      ]
+    },
+    {
+      "id": "year-ahead",
+      "name": "Year Ahead",
+      "category": "yearly",
+      "tier": "free",
+      "thumb": null,
+      "canvas": {
+        "width": 1800,
+        "height": 1200,
+        "canvas_id": "void"
+      },
+      "tiles": [
+        {
+          "id": "q0",
+          "type": "text",
+          "x": 120,
+          "y": 120,
+          "w": 340,
+          "h": 70,
+          "z": 1,
+          "rotation": 0,
+          "content": {
+            "text": "Q1",
+            "fontSize": 38,
+            "fontFamily": "'Space Grotesk', sans-serif",
+            "color": "#EDEFF7"
+          }
+        },
+        {
+          "id": "q1",
+          "type": "text",
+          "x": 520,
+          "y": 120,
+          "w": 340,
+          "h": 70,
+          "z": 1,
+          "rotation": 0,
+          "content": {
+            "text": "Q2",
+            "fontSize": 38,
+            "fontFamily": "'Space Grotesk', sans-serif",
+            "color": "#EDEFF7"
+          }
+        },
+        {
+          "id": "q2",
+          "type": "text",
+          "x": 920,
+          "y": 120,
+          "w": 340,
+          "h": 70,
+          "z": 1,
+          "rotation": 0,
+          "content": {
+            "text": "Q3",
+            "fontSize": 38,
+            "fontFamily": "'Space Grotesk', sans-serif",
+            "color": "#EDEFF7"
+          }
+        },
+        {
+          "id": "q3",
+          "type": "text",
+          "x": 1320,
+          "y": 120,
+          "w": 340,
+          "h": 70,
+          "z": 1,
+          "rotation": 0,
+          "content": {
+            "text": "Q4",
+            "fontSize": 38,
+            "fontFamily": "'Space Grotesk', sans-serif",
+            "color": "#EDEFF7"
+          }
+        }
+      ]
+    }
+  ]
 }
