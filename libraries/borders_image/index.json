@@ -1,6 +1,6 @@
 {
   "library": "borders_image",
-  "version": 1,
+  "version": 3,
   "updated": "2026-08-29",
   "categories": [
     "polaroid",
@@ -10,5 +10,46 @@
     "vignette",
     "tape-edge"
   ],
-  "items": []
+  "items": [
+    {
+      "id": "thin-rule",
+      "name": "Thin Rule",
+      "category": "thin-rule",
+      "asset": "assets/thin-rule.svg",
+      "slice": 3,
+      "padding": 0,
+      "thumb": "assets/thin-rule.svg",
+      "tier": "free"
+    },
+    {
+      "id": "polaroid",
+      "name": "Polaroid",
+      "category": "polaroid",
+      "asset": "assets/polaroid.svg",
+      "slice": 10,
+      "padding": 30,
+      "thumb": "assets/polaroid.svg",
+      "tier": "free"
+    },
+    {
+      "id": "deckled",
+      "name": "Deckled",
+      "category": "deckled",
+      "asset": "assets/deckled.svg",
+      "slice": 9,
+      "padding": 0,
+      "thumb": "assets/deckled.svg",
+      "tier": "free"
+    },
+    {
+      "id": "tape-edge",
+      "name": "Taped",
+      "category": "tape-edge",
+      "asset": "assets/tape-edge.svg",
+      "slice": 5,
+      "padding": 0,
+      "thumb": "assets/tape-edge.svg",
+      "tier": "plus"
+    }
+  ]
 }
