@@ -1,6 +1,6 @@
 {
   "library": "images",
-  "version": 1,
+  "version": 2,
   "updated": "2026-08-29",
   "categories": [
     "mansions",
@@ -16,5 +16,153 @@
     "wealth",
     "wellness"
   ],
-  "items": []
+  "items": [
+    {
+      "id": "pack-mansions",
+      "name": "Mansions",
+      "category": "mansions",
+      "query": "luxury mansion architecture exterior",
+      "kind": "search",
+      "thumb": null,
+      "credit": "live search",
+      "license": "per-provider",
+      "tier": "free"
+    },
+    {
+      "id": "pack-cars",
+      "name": "Cars",
+      "category": "cars",
+      "query": "luxury sports car",
+      "kind": "search",
+      "thumb": null,
+      "credit": "live search",
+      "license": "per-provider",
+      "tier": "free"
+    },
+    {
+      "id": "pack-beaches",
+      "name": "Beaches",
+      "category": "beaches",
+      "query": "tropical beach turquoise water",
+      "kind": "search",
+      "thumb": null,
+      "credit": "live search",
+      "license": "per-provider",
+      "tier": "free"
+    },
+    {
+      "id": "pack-yachts",
+      "name": "Yachts",
+      "category": "yachts",
+      "query": "luxury yacht ocean",
+      "kind": "search",
+      "thumb": null,
+      "credit": "live search",
+      "license": "per-provider",
+      "tier": "free"
+    },
+    {
+      "id": "pack-jets",
+      "name": "Jets",
+      "category": "jets",
+      "query": "private jet interior runway",
+      "kind": "search",
+      "thumb": null,
+      "credit": "live search",
+      "license": "per-provider",
+      "tier": "free"
+    },
+    {
+      "id": "pack-designer-logos",
+      "name": "Designer Logos",
+      "category": "designer-logos",
+      "query": "luxury fashion boutique detail",
+      "kind": "search",
+      "thumb": null,
+      "credit": "live search",
+      "license": "per-provider",
+      "tier": "free"
+    },
+    {
+      "id": "pack-travel",
+      "name": "Travel",
+      "category": "travel",
+      "query": "travel destination landscape",
+      "kind": "search",
+      "thumb": null,
+      "credit": "live search",
+      "license": "per-provider",
+      "tier": "free"
+    },
+    {
+      "id": "pack-fitness",
+      "name": "Fitness",
+      "category": "fitness",
+      "query": "athlete training gym",
+      "kind": "search",
+      "thumb": null,
+      "credit": "live search",
+      "license": "per-provider",
+      "tier": "free"
+    },
+    {
+      "id": "pack-family",
+      "name": "Family",
+      "category": "family",
+      "query": "happy family home candid",
+      "kind": "search",
+      "thumb": null,
+      "credit": "live search",
+      "license": "per-provider",
+      "tier": "free"
+    },
+    {
+      "id": "pack-career",
+      "name": "Career",
+      "category": "career",
+      "query": "modern office workspace",
+      "kind": "search",
+      "thumb": null,
+      "credit": "live search",
+      "license": "per-provider",
+      "tier": "free"
+    },
+    {
+      "id": "pack-wealth",
+      "name": "Wealth",
+      "category": "wealth",
+      "query": "financial success wealth",
+      "kind": "search",
+      "thumb": null,
+      "credit": "live search",
+      "license": "per-provider",
+      "tier": "free"
+    },
+    {
+      "id": "pack-wellness",
+      "name": "Wellness",
+      "category": "wellness",
+      "query": "calm wellness meditation nature",
+      "kind": "search",
+      "thumb": null,
+      "credit": "live search",
+      "license": "per-provider",
+      "tier": "free"
+    }
+  ],
+  "note": "Photos are fetched live, not bundled. searchTerms drives the Photo tab chips.",
+  "searchTerms": {
+    "mansions": "luxury mansion architecture exterior",
+    "cars": "luxury sports car",
+    "beaches": "tropical beach turquoise water",
+    "yachts": "luxury yacht ocean",
+    "jets": "private jet interior runway",
+    "designer-logos": "luxury fashion boutique detail",
+    "travel": "travel destination landscape",
+    "fitness": "athlete training gym",
+    "family": "happy family home candid",
+    "career": "modern office workspace",
+    "wealth": "financial success wealth",
+    "wellness": "calm wellness meditation nature"
+  }
 }
