@@ -1,0 +1,83 @@
+{
+  "library": "fonts",
+  "version": 1,
+  "updated": "2026-08-29",
+  "categories": [
+    "display",
+    "serif",
+    "sans",
+    "script",
+    "mono",
+    "handwritten"
+  ],
+  "items": [
+    {
+      "id": "space-grotesk",
+      "name": "Space Grotesk",
+      "stack": "'Space Grotesk', sans-serif",
+      "category": "display",
+      "source": "google",
+      "weights": [
+        500,
+        600,
+        700
+      ],
+      "license": "OFL-1.1",
+      "tier": "free"
+    },
+    {
+      "id": "sora",
+      "name": "Sora",
+      "stack": "'Sora', sans-serif",
+      "category": "sans",
+      "source": "google",
+      "weights": [
+        400,
+        500,
+        600
+      ],
+      "license": "OFL-1.1",
+      "tier": "free"
+    },
+    {
+      "id": "inter",
+      "name": "Inter",
+      "stack": "'Inter', sans-serif",
+      "category": "sans",
+      "source": "google",
+      "weights": [
+        400,
+        500,
+        600,
+        700
+      ],
+      "license": "OFL-1.1",
+      "tier": "free"
+    },
+    {
+      "id": "playfair",
+      "name": "Playfair Display",
+      "stack": "'Playfair Display', serif",
+      "category": "serif",
+      "source": "google",
+      "weights": [
+        700
+      ],
+      "license": "OFL-1.1",
+      "tier": "free"
+    },
+    {
+      "id": "jetbrains-mono",
+      "name": "JetBrains Mono",
+      "stack": "'JetBrains Mono', monospace",
+      "category": "mono",
+      "source": "google",
+      "weights": [
+        400,
+        700
+      ],
+      "license": "OFL-1.1",
+      "tier": "free"
+    }
+  ]
+}
