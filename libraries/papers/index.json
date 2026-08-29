@@ -1,0 +1,50 @@
+{
+  "library": "papers",
+  "version": 2,
+  "updated": "2026-08-29",
+  "categories": [
+    "lined",
+    "grid",
+    "dotted",
+    "scroll",
+    "parchment",
+    "ledger",
+    "graph",
+    "legal-pad"
+  ],
+  "items": [
+    {
+      "id": "lined-classic",
+      "name": "Ruled",
+      "category": "lined",
+      "asset": "assets/lined-classic.svg",
+      "tileable": true,
+      "lineHeight": 32,
+      "inkColor": "#1a1f3d",
+      "thumb": null,
+      "tier": "free"
+    },
+    {
+      "id": "grid-fine",
+      "name": "Grid",
+      "category": "grid",
+      "asset": "assets/grid-fine.svg",
+      "tileable": true,
+      "lineHeight": 28,
+      "inkColor": "#1a1f3d",
+      "thumb": null,
+      "tier": "free"
+    },
+    {
+      "id": "dotted",
+      "name": "Dot Grid",
+      "category": "dotted",
+      "asset": "assets/dotted.svg",
+      "tileable": true,
+      "lineHeight": 28,
+      "inkColor": "#1a1f3d",
+      "thumb": null,
+      "tier": "free"
+    }
+  ]
+}
