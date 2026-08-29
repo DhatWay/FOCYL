@@ -6,7 +6,7 @@
   <title>Focyl — Your future, in focus.</title>
   <meta name="description" content="Focyl converges your goals into one image, then puts it where you'll actually see it — on your phone, printed on your wall, or live on a screen that reacts to your progress.">
   <meta name="theme-color" content="#070914">
-  <link rel="manifest" href="/manifest.json">
+  <link rel="manifest" href="manifest.json">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Sora:wght@400;500;600&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
@@ -346,7 +346,7 @@
       .hero-iris{ opacity:1; transform:none; }
     }
   </style>
-  <script src="/lib/focyl-brand.js" defer></script>
+  <script src="lib/focyl-brand.js" defer></script>
 </head>
 <body>
 
@@ -464,7 +464,7 @@
   //  PWA SERVICE WORKER REGISTRATION
   // ================================================================
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('/sw.js')
+    navigator.serviceWorker.register('sw.js')
       .then(reg => console.log('SW registered'))
       .catch(err => console.warn('SW registration failed', err));
   }

@@ -7,12 +7,13 @@
    static assets, and deletes old caches on activate.
    Bump CACHE on every deploy.
    ============================================================ */
-const CACHE = 'focyl-v1';
+const CACHE = 'focyl-v3';
 const SHELL = [
-  '/', '/index.html', '/auth.html', '/board.html',
-  '/manifest.json',
-  '/lib/focyl-config.js', '/lib/focyl-brand.js', '/lib/focyl-libraries.js', '/lib/focyl-picker.js',
-  '/assets/focyl-mark.svg', '/assets/icon-192.png', '/assets/icon-512.png'
+  './', './index.html', './auth.html', './board.html',
+  './manifest.json',
+  './lib/focyl-config.js', './lib/focyl-brand.js',
+  './lib/focyl-libraries.js', './lib/focyl-picker.js',
+  './assets/focyl-mark.svg', './assets/icon-192.png', './assets/icon-512.png'
 ];
 
 self.addEventListener('install', e => {
@@ -34,7 +35,7 @@ self.addEventListener('fetch', e => {
 
   const url = new URL(request.url);
   if (url.origin !== self.location.origin) return;      // never cache Supabase or CDN calls
-  if (url.pathname.startsWith('/functions/')) return;   // never cache Edge Functions
+  if (url.pathname.includes('/functions/')) return;   // never cache Edge Functions
 
   const isPage = request.mode === 'navigate' || url.pathname.endsWith('.html');
 
@@ -47,7 +48,7 @@ self.addEventListener('fetch', e => {
           caches.open(CACHE).then(c => c.put(request, copy));
           return res;
         })
-        .catch(() => caches.match(request).then(r => r || caches.match('/index.html')))
+        .catch(() => caches.match(request).then(r => r || caches.match('./index.html')))
     );
     return;
   }

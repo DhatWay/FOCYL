@@ -5,12 +5,12 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2, viewport-fit=cover, user-scalable=no">
   <title>Focyl — Board</title>
   <meta name="theme-color" content="#070914">
-  <link rel="manifest" href="/manifest.json">
+  <link rel="manifest" href="manifest.json">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="/lib/focyl-config.js"></script>
-  <script src="/lib/focyl-brand.js" defer></script>
-  <script src="/lib/focyl-libraries.js" defer></script>
-  <script src="/lib/focyl-picker.js" defer></script>
+  <script src="lib/focyl-config.js"></script>
+  <script src="lib/focyl-brand.js" defer></script>
+  <script src="lib/focyl-libraries.js" defer></script>
+  <script src="lib/focyl-picker.js" defer></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Sora:wght@400;500;600&family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
@@ -56,7 +56,15 @@
       flex: 1;
       min-width: 0;
     }
-    .topbar .back { background: transparent; border: none; color: var(--mist); font-size: 0.85rem; cursor: pointer; font-family: inherit; padding: 4px 0; }
+    .topbar .back {
+      background: transparent; border: none; color: var(--mist);
+      cursor: pointer; font-family: inherit; flex-shrink: 0;
+      width: 30px; height: 30px; border-radius: 9px; padding: 0;
+      display: flex; align-items: center; justify-content: center;
+      transition: background .18s, color .18s;
+    }
+    .topbar .back:hover { background: var(--ink-2); color: var(--paper); }
+    .topbar .back svg { width: 18px; height: 18px; }
     .brand-logo { width: 30px; height: 30px; border-radius: 9px; cursor: pointer; flex-shrink: 0; }
     .topbar .title { font-family: var(--display); font-weight: 600; font-size: 1rem; background: var(--grad); -webkit-background-clip: text; background-clip: text; color: transparent; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .topbar .right {
@@ -116,6 +124,7 @@
       will-change: transform;
     }
     .tile:active { cursor: grabbing; }
+    .tile.selected { outline: 2px solid var(--violet); outline-offset: 3px; }
     .tile.dragging { z-index: 50; box-shadow: 0 24px 50px -18px rgba(0,0,0,0.85), 0 0 60px rgba(139,124,246,0.2); }
 
     .tile.text-tile {
@@ -195,15 +204,24 @@
     .sheet.open { transform: translateY(0); }
     .grabber { width: 36px; height: 4px; background: var(--line); border-radius: 4px; margin: 0 auto 18px; }
 
+    /* Horizontally scrollable so tabs keep a readable, tappable width
+       however many libraries are added. flex:1 crushed them before. */
     .tabs {
       display: flex; gap: 6px; margin-bottom: 18px;
       background: var(--ink-2); border-radius: 100px; padding: 4px;
+      overflow-x: auto; overflow-y: hidden;
+      scrollbar-width: none; -webkit-overflow-scrolling: touch;
+      scroll-snap-type: x proximity;
     }
+    .tabs::-webkit-scrollbar { display: none; }
     .tab {
-      flex: 1; text-align: center; padding: 9px 0; border-radius: 100px;
-      font-size: 0.82rem; font-weight: 600; cursor: pointer; color: var(--mist);
+      flex: 0 0 auto; text-align: center;
+      padding: 9px 16px; border-radius: 100px; scroll-snap-align: center;
+      font-size: 0.8rem; font-weight: 600; cursor: pointer; color: var(--mist);
       border: none; background: transparent; font-family: inherit;
+      white-space: nowrap; transition: background .18s, color .18s;
     }
+    .tab:hover { color: var(--paper); }
     .tab.active { background: var(--grad); color: #070914; }
 
     .panel { display: none; }
@@ -216,12 +234,77 @@
     }
     input, textarea, select {
       width: 100%; background: var(--ink-2); border: 1px solid var(--line);
-      color: var(--paper); border-radius: 12px; padding: 12px 14px;
+      color: var(--paper); border-radius: 12px; padding: 0 14px;
+      height: 46px; line-height: 46px;
       font-family: var(--body); font-size: 0.95rem; margin-bottom: 12px;
-      resize: none;
+      resize: none; outline: none; transition: border-color .18s, box-shadow .18s;
     }
-    input[type="color"] { padding: 4px; height: 44px; cursor: pointer; }
-    select { appearance: none; }
+    textarea { height: auto; line-height: 1.5; padding: 12px 14px; }
+    input:focus, textarea:focus, select:focus {
+      border-color: var(--violet);
+      box-shadow: 0 0 0 3px rgba(139,124,246,0.18);
+    }
+
+    /* Custom caret — `appearance:none` alone left the select looking broken */
+    select {
+      appearance: none; -webkit-appearance: none; cursor: pointer;
+      padding-right: 40px;
+      background-image:
+        linear-gradient(45deg, transparent 50%, var(--mist) 50%),
+        linear-gradient(135deg, var(--mist) 50%, transparent 50%);
+      background-position: calc(100% - 20px) 50%, calc(100% - 14px) 50%;
+      background-size: 6px 6px, 6px 6px;
+      background-repeat: no-repeat;
+    }
+    select option { background: var(--ink-2); color: var(--paper); }
+
+    /* Field row: label and control share one aligned grid so every
+       panel lines up on the same left edge and the same 46px height. */
+    .field { margin-bottom: 14px; }
+    .field > label { margin-bottom: 7px; }
+    .field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .field-row .field { margin-bottom: 0; }
+
+    /* Colour: native swatch replaced with a round chip + hex readout */
+    .color-row {
+      display: flex; align-items: center; gap: 12px;
+      background: var(--ink-2); border: 1px solid var(--line);
+      border-radius: 12px; padding: 0 14px; height: 46px; margin-bottom: 12px;
+    }
+    .color-chip {
+      position: relative; width: 26px; height: 26px; border-radius: 50%;
+      flex-shrink: 0; border: 2px solid rgba(237,239,247,0.25);
+      box-shadow: 0 0 0 1px rgba(0,0,0,0.4); overflow: hidden; cursor: pointer;
+    }
+    .color-chip input[type="color"] {
+      position: absolute; inset: -6px; width: 200%; height: 200%;
+      border: none; padding: 0; margin: 0; background: none; cursor: pointer;
+    }
+    .color-row .hex {
+      font-family: var(--mono); font-size: 0.82rem; color: var(--paper);
+      text-transform: uppercase; letter-spacing: .04em;
+    }
+    .color-row .swatches { display: flex; gap: 6px; margin-left: auto; }
+    .color-row .swatches button {
+      width: 20px; height: 20px; border-radius: 50%; cursor: pointer;
+      border: 1px solid rgba(237,239,247,0.2); padding: 0;
+    }
+
+    /* Range slider, themed */
+    input[type="range"] {
+      -webkit-appearance: none; appearance: none;
+      height: 4px; padding: 0; border: none; border-radius: 4px;
+      background: var(--line); margin: 0;
+    }
+    input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none; width: 18px; height: 18px; border-radius: 50%;
+      background: var(--grad); cursor: pointer; border: 2px solid var(--ink);
+      box-shadow: 0 2px 8px rgba(0,0,0,.5);
+    }
+    input[type="range"]::-moz-range-thumb {
+      width: 18px; height: 18px; border-radius: 50%; border: 2px solid var(--ink);
+      background: var(--violet); cursor: pointer;
+    }
     .btn-primary {
       width: 100%; background: var(--grad); color: #070914; border: none;
       border-radius: 100px; padding: 13px 0; font-weight: 600; font-size: 0.95rem;
@@ -250,12 +333,25 @@
     input[type="file"] { display: none; }
 
     .font-size-control {
-      display: flex; align-items: center; gap: 10px;
+      display: flex; align-items: center; gap: 12px;
+      background: var(--ink-2); border: 1px solid var(--line);
+      border-radius: 12px; padding: 0 14px; height: 46px; margin-bottom: 12px;
     }
     .font-size-control input[type="range"] { flex: 1; margin: 0; }
-    .font-size-control span { font-family: var(--mono); font-size: 0.9rem; min-width: 40px; }
-    .crop-row { display: flex; gap: 10px; }
-    .crop-row input { flex: 1; }
+    .font-size-control span {
+      font-family: var(--mono); font-size: 0.82rem; color: var(--mist);
+      min-width: 46px; text-align: right;
+    }
+    .crop-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .crop-row input { margin-bottom: 0; }
+
+    /* Live preview of the chosen font, size and colour */
+    .type-preview {
+      border: 1px dashed rgba(237,239,247,0.16); border-radius: 12px;
+      padding: 16px 14px; margin-bottom: 14px; text-align: center;
+      min-height: 62px; display: flex; align-items: center; justify-content: center;
+      overflow: hidden; word-break: break-word;
+    }
 
     @media (max-width: 600px) { .sheet { padding: 16px; } }
 
@@ -288,7 +384,14 @@
 <!-- TOPBAR -->
 <div class="topbar">
   <div class="left">
-    <focyl-mark class="brand-logo" size="30" link></focyl-mark> 
+    <button class="back" id="backBtn" aria-label="Back" title="Back">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
+           stroke-linecap="round" stroke-linejoin="round">
+        <polyline points="15 18 9 12 15 6"/>
+      </svg>
+    </button>
+    <focyl-mark class="brand-logo" size="30" link href="index.html"
+                title="Focyl — home"></focyl-mark>
     <span class="title" id="boardTitle">My Board</span>
   </div>
   <div class="right">
@@ -323,26 +426,23 @@
 <div class="scrim" id="scrim" onclick="closeSheet()"></div>
 <div class="sheet" id="sheet">
   <div class="grabber"></div>
-  <div class="tabs">
-    <button class="tab active" id="tabPhoto" onclick="switchTab('photo')">Photo</button>
-    <button class="tab" id="tabWords" onclick="switchTab('words')">Words</button>
-    <button class="tab" id="tabPapers" onclick="switchTab('papers')">Papers</button>
-    <button class="tab" id="tabRibbons" onclick="switchTab('ribbons')">Ribbons</button>
-    <button class="tab" id="tabAudio" onclick="switchTab('audio')">Audio</button>
-    <button class="tab" id="tabSettings" onclick="switchTab('settings')">Settings</button>
+  <div class="tabs" id="sheetTabs">
+    <button class="tab active" id="tabPhoto"    onclick="switchTab('photo')">Photo</button>
+    <button class="tab" id="tabWords"     onclick="switchTab('words')">Words</button>
+    <button class="tab" id="tabFonts"     onclick="switchTab('fonts')">Fonts</button>
+    <button class="tab" id="tabPapers"    onclick="switchTab('papers')">Papers</button>
+    <button class="tab" id="tabNotes"     onclick="switchTab('notes')">Notes</button>
+    <button class="tab" id="tabRibbons"   onclick="switchTab('ribbons')">Ribbons</button>
+    <button class="tab" id="tabCanvases"  onclick="switchTab('canvases')">Canvases</button>
+    <button class="tab" id="tabBorders"   onclick="switchTab('borders')">Borders</button>
+    <button class="tab" id="tabAudio"     onclick="switchTab('audio')">Audio</button>
+    <button class="tab" id="tabSettings"  onclick="switchTab('settings')">Settings</button>
   </div>
 
   <div class="panel active" id="panelPhoto">
     <label for="photoQuery">Search free photos</label>
     <input type="text" id="photoQuery" placeholder="studio, mid thirties…">
-    <div class="cat-chips">
-      <button type="button" onclick="searchCategory('luxury mansion')">Mansions</button>
-      <button type="button" onclick="searchCategory('luxury sports car')">Cars</button>
-      <button type="button" onclick="searchCategory('tropical beach')">Beaches</button>
-      <button type="button" onclick="searchCategory('luxury yacht')">Yachts</button>
-      <button type="button" onclick="searchCategory('private jet')">Jets</button>
-      <button type="button" onclick="searchCategory('designer logo fashion')">Designer Logos</button>
-    </div>
+    <div class="cat-chips" id="photoChips"></div>
     <button class="btn-primary" id="searchBtn" onclick="doSearch()">Search</button>
     <div class="results" id="results"></div>
     <p class="hint" id="photoHint"></p>
@@ -352,36 +452,54 @@
   </div>
 
   <div class="panel" id="panelWords">
-    <label for="quoteText">In your own words, future tense</label>
-    <textarea id="quoteText" rows="2" placeholder="I run my own studio."></textarea>
-    <div class="font-size-control">
-      <label>Font size</label>
-      <input type="range" id="textSizeSlider" min="12" max="120" value="32" oninput="document.getElementById('textSizeDisplay').textContent=this.value+'px'">
-      <span id="textSizeDisplay">32px</span>
+    <div class="field">
+      <label for="quoteText">In your own words, future tense</label>
+      <textarea id="quoteText" rows="2" placeholder="I run my own studio."></textarea>
     </div>
-    <label>Font family</label>
-    <select id="fontFamilySelect">
-      <option value="'Space Grotesk', sans-serif">Space Grotesk</option>
-      <option value="'Sora', sans-serif">Sora</option>
-      <option value="'Inter', sans-serif">Inter</option>
-      <option value="'Playfair Display', serif">Playfair Display</option>
-      <option value="'JetBrains Mono', monospace">JetBrains Mono</option>
-      <option value="'Georgia', serif">Georgia</option>
-      <option value="'Arial', sans-serif">Arial</option>
-    </select>
-    <label>Font color</label>
-    <input type="color" id="textColorPicker" value="#EDEFF7">
+
+    <div class="type-preview" id="typePreview">Your vision</div>
+
+    <div class="field">
+      <label>Font family</label>
+      <select id="fontFamilySelect"></select>
+    </div>
+
+    <div class="field">
+      <label>Font size</label>
+      <div class="font-size-control">
+        <input type="range" id="textSizeSlider" min="12" max="120" value="32">
+        <span id="textSizeDisplay">32px</span>
+      </div>
+    </div>
+
+    <div class="field">
+      <label>Font colour</label>
+      <div class="color-row">
+        <span class="color-chip" id="colorChip">
+          <input type="color" id="textColorPicker" value="#EDEFF7">
+        </span>
+        <span class="hex" id="colorHex">#EDEFF7</span>
+        <span class="swatches" id="colorSwatches"></span>
+      </div>
+    </div>
+
     <button class="btn-primary" id="addTextBtn" onclick="addTextTile()">Add Text Tile</button>
   </div>
 
-  <!-- Library panels. Populated at runtime from libraries/<id>/index.json —
-       no markup changes needed when you add assets. -->
-  <div class="panel" id="panelPapers">
-    <label>Paper surfaces</label>
-  </div>
-
-  <div class="panel" id="panelRibbons">
-    <label>Ribbons and banners</label>
+  <!-- Library panels. Every one is populated at runtime from
+       libraries/<id>/index.json — no markup change when you add assets. -->
+  <div class="panel" id="panelFonts"></div>
+  <div class="panel" id="panelPapers"></div>
+  <div class="panel" id="panelNotes"></div>
+  <div class="panel" id="panelRibbons"></div>
+  <div class="panel" id="panelCanvases"></div>
+  <div class="panel" id="panelBorders">
+    <div class="tabs" style="margin-bottom:14px">
+      <button class="tab active" id="subBoardBorder" onclick="switchBorder('board')">Board edge</button>
+      <button class="tab" id="subImageBorder" onclick="switchBorder('image')">Image frame</button>
+    </div>
+    <div id="panelBordersBoard"></div>
+    <div id="panelBordersImage" style="display:none"></div>
   </div>
 
   <div class="panel" id="panelAudio">
@@ -460,6 +578,7 @@
   // ================================================================
   let board = null;
   let tiles = [];
+  let selectedTile = null;   // last tapped tile; targets font + frame actions
   let boardId = null;
   let scale = 1;
   const MIN_SCALE = 0.15;
@@ -558,22 +677,28 @@
     log('Sheet closed');
   };
 
+  const PANELS = ['photo','words','fonts','papers','notes','ribbons',
+                  'canvases','borders','audio','settings'];
+
   window.switchTab = function(panelId) {
-    const tabs = document.querySelectorAll('.tab');
-    const panels = {
-      photo: document.getElementById('panelPhoto'),
-      words: document.getElementById('panelWords'),
-      papers: document.getElementById('panelPapers'),
-      ribbons: document.getElementById('panelRibbons'),
-      audio: document.getElementById('panelAudio'),
-      settings: document.getElementById('panelSettings'),
-    };
-    tabs.forEach(t => t.classList.remove('active'));
-    const activeTab = document.getElementById('tab' + panelId.charAt(0).toUpperCase() + panelId.slice(1));
-    if (activeTab) activeTab.classList.add('active');
-    Object.values(panels).forEach(p => p.classList.remove('active'));
-    if (panels[panelId]) panels[panelId].classList.add('active');
+    document.querySelectorAll('#sheetTabs > .tab').forEach(t => t.classList.remove('active'));
+    const tab = document.getElementById('tab' + panelId.charAt(0).toUpperCase() + panelId.slice(1));
+    if (tab) {
+      tab.classList.add('active');
+      tab.scrollIntoView({ inline: 'center', block: 'nearest', behavior: 'smooth' });
+    }
+    PANELS.forEach(p => {
+      const el = document.getElementById('panel' + p.charAt(0).toUpperCase() + p.slice(1));
+      if (el) el.classList.toggle('active', p === panelId);
+    });
     log('Switched to ' + panelId);
+  };
+
+  window.switchBorder = function(which) {
+    document.getElementById('subBoardBorder').classList.toggle('active', which === 'board');
+    document.getElementById('subImageBorder').classList.toggle('active', which === 'image');
+    document.getElementById('panelBordersBoard').style.display = which === 'board' ? '' : 'none';
+    document.getElementById('panelBordersImage').style.display = which === 'image' ? '' : 'none';
   };
 
   // ================================================================
@@ -847,6 +972,14 @@
 
     if (t.type === 'image') {
       el.style.backgroundImage = `url('${t.content.url}')`;
+      if (t.content.frame) {
+        el.style.borderStyle = 'solid';
+        el.style.borderWidth = t.content.frame.slice + 'px';
+        el.style.borderImageSource = `url('${t.content.frame.asset}')`;
+        el.style.borderImageSlice = String(t.content.frame.slice);
+        el.style.borderImageRepeat = 'stretch';
+        if (t.content.frame.padding) el.style.paddingBottom = t.content.frame.padding + 'px';
+      }
       // No resize/rotate handles by design — two-finger pinch and twist on
       // the tile itself does both (see makeDraggable). Only buttons on an
       // image tile are delete (×) and Redesign.
@@ -900,6 +1033,30 @@
         saveBoard();
       });
       el.appendChild(label);
+    } else if (t.type === 'note') {
+      el.style.border = 'none';
+      if (t.content.asset) {
+        el.style.backgroundImage = `url('${t.content.asset}')`;
+        el.style.backgroundSize = '100% 100%';
+      } else {
+        el.style.background = t.content.color || '#F7E06A';
+      }
+      el.style.boxShadow = '0 10px 20px -10px rgba(0,0,0,.7)';
+      const nb = document.createElement('div');
+      nb.contentEditable = true;
+      nb.textContent = t.content.text || '';
+      nb.dataset.placeholder = 'Note…';
+      nb.style.cssText =
+        'position:absolute;inset:0;padding:16px;outline:none;overflow:hidden;' +
+        `color:${t.content.inkColor || '#2a2410'};font-size:15px;line-height:1.4;` +
+        "font-family:'Sora',sans-serif;";
+      nb.addEventListener('input', () => {
+        const max = t.content.maxChars || 120;
+        if (nb.textContent.length > max) nb.textContent = nb.textContent.slice(0, max);
+        t.content.text = nb.textContent;
+        saveBoard();
+      });
+      el.appendChild(nb);
     } else if (t.type === 'audio') {
       el.classList.add('audio-tile');
       const playBtn = document.createElement('div');
@@ -965,7 +1122,10 @@
     // Click to front
     el.addEventListener('click', (e) => {
       if (e.target.closest('.del') || e.target.closest('.redesign-btn')) return;
-      const maxZ = Math.max(0, ...tiles.map(t => t.z || 1));
+      selectedTile = t;
+      document.querySelectorAll('.tile.selected').forEach(x => x.classList.remove('selected'));
+      el.classList.add('selected');
+      const maxZ = Math.max(0, ...tiles.map(t2 => t2.z || 1));
       t.z = maxZ + 1;
       el.style.zIndex = t.z;
       saveBoard();
@@ -1095,6 +1255,60 @@
     document.getElementById('photoQuery').value = term;
     searchPhotos(term);
   };
+
+  // ================================================================
+  //  TYPE CONTROLS (font, size, colour) + live preview
+  // ================================================================
+  const SWATCHES = ['#EDEFF7','#070914','#35D8F0','#8B7CF6','#EA4FC9','#F5B942'];
+
+  async function initTypeControls() {
+    const sel     = document.getElementById('fontFamilySelect');
+    const slider  = document.getElementById('textSizeSlider');
+    const sizeOut = document.getElementById('textSizeDisplay');
+    const picker  = document.getElementById('textColorPicker');
+    const hexOut  = document.getElementById('colorHex');
+    const chip    = document.getElementById('colorChip');
+    const preview = document.getElementById('typePreview');
+    const swatchBox = document.getElementById('colorSwatches');
+    if (!sel) return;
+
+    // Fonts come from the library, not a hardcoded <option> list.
+    const fonts = await FocylLibraries.items('fonts');
+    sel.innerHTML = '';
+    (fonts.length ? fonts : [{ id:'sora', name:'Sora', stack:"'Sora', sans-serif" }])
+      .forEach(f => {
+        const o = document.createElement('option');
+        o.value = f.stack; o.textContent = f.name;
+        o.style.fontFamily = f.stack;
+        sel.appendChild(o);
+      });
+
+    swatchBox.innerHTML = '';
+    SWATCHES.forEach(c => {
+      const b = document.createElement('button');
+      b.type = 'button'; b.style.background = c; b.title = c;
+      b.onclick = () => { picker.value = c; sync(); };
+      swatchBox.appendChild(b);
+    });
+
+    function sync() {
+      const size = slider.value;
+      sizeOut.textContent = size + 'px';
+      hexOut.textContent = picker.value.toUpperCase();
+      chip.style.background = picker.value;
+      const txt = document.getElementById('quoteText').value.trim() || 'Your vision';
+      preview.textContent = txt;
+      preview.style.fontFamily = sel.value;
+      preview.style.fontSize = Math.min(size, 46) + 'px';
+      preview.style.color = picker.value;
+    }
+
+    sel.addEventListener('change', sync);
+    slider.addEventListener('input', sync);
+    picker.addEventListener('input', sync);
+    document.getElementById('quoteText').addEventListener('input', sync);
+    sync();
+  }
 
   window.addTextTile = function() {
     const text = document.getElementById('quoteText').value.trim() || 'Your vision';
@@ -1269,59 +1483,173 @@
   // ================================================================
   //  INIT
   // ================================================================
+  document.getElementById('backBtn').addEventListener('click', () => {
+    saveBoard({ immediate: true });
+    if (history.length > 1) history.back();
+    else window.location.href = 'index.html';
+  });
+
   log('Script started');
   loadBoard();
 
   // ================================================================
-  //  LIBRARY PANELS
-  //  Two wired end to end to prove the manifest pattern. The other
-  //  seven mount with one line each once their index.json has items.
+  //  LIBRARY PANELS — every library mounted and wired
   // ================================================================
-  window.addEventListener('DOMContentLoaded', () => {
-    if (!window.FocylPicker) return;
+  async function initLibraries() {
+    if (!window.FocylPicker) { log('Picker not loaded'); return; }
     const tier = session?.tier === 'film' ? 'film'
                : session?.tier === 'press' ? 'plus' : 'free';
+    const locked = item => alert(`"${item.name}" is part of a paid tier.`);
+    const mount = (sel, lib, onPick) =>
+      FocylPicker.mount(sel, lib, { tier, onPick, onLocked: locked });
 
-    FocylPicker.mount('#panelPapers', 'papers', {
-      tier,
-      onPick: item => {
-        addTile({
-          type: 'text',
-          library_id: item.library_id,
-          asset_id: item.asset_id,
-          content: {
-            text: 'Write here',
-            fontSize: 24,
-            fontFamily: "'Sora', sans-serif",
-            color: item.inkColor || '#14172b',
-            paper: item.asset ? FocylLibraries.assetUrl('papers', item.asset) : null,
-            lineHeight: item.lineHeight || 32
-          },
-          w: 300, h: 220
-        });
-        closeSheet();
-      },
-      onLocked: item => alert(`"${item.name}" is part of a paid tier.`)
+    // Photo category chips, driven by the images library
+    const imgLib = await FocylLibraries.load('images');
+    const chips = document.getElementById('photoChips');
+    if (chips) {
+      chips.innerHTML = '';
+      imgLib.categories.forEach(c => {
+        const b = document.createElement('button');
+        b.type = 'button';
+        b.textContent = c.replace(/-/g, ' ');
+        b.onclick = () => searchCategory(imgLib.searchTerms?.[c] || c.replace(/-/g, ' '));
+        chips.appendChild(b);
+      });
+    }
+
+    // FONTS — applies to the selected tile, or seeds the next text tile
+    await mount('#panelFonts', 'fonts', item => {
+      const sel = document.getElementById('fontFamilySelect');
+      if (sel) sel.value = item.stack;
+      if (selectedTile && selectedTile.type === 'text') {
+        selectedTile.content.fontFamily = item.stack;
+        const el = document.querySelector(`.tile[data-id="${selectedTile.id}"] .text-content`);
+        if (el) el.style.fontFamily = item.stack;
+        saveBoard();
+        setStatus('Font applied');
+      } else {
+        switchTab('words');
+        setStatus('Font selected — add a text tile');
+      }
     });
 
-    FocylPicker.mount('#panelRibbons', 'ribbons', {
-      tier,
-      onPick: item => {
-        addTile({
-          type: 'ribbon',
-          library_id: item.library_id,
-          asset_id: item.asset_id,
-          content: {
-            asset: FocylLibraries.assetUrl('ribbons', item.asset),
-            text: 'Goal',
-            textBox: item.textBox || null
-          },
-          w: 260, h: 90
-        });
-        closeSheet();
-      },
-      onLocked: item => alert(`"${item.name}" is part of a paid tier.`)
+    // PAPERS — a writable surface
+    await mount('#panelPapers', 'papers', item => {
+      addTile({
+        type: 'text', library_id: item.library_id, asset_id: item.asset_id,
+        content: {
+          text: 'Write here', fontSize: 22,
+          fontFamily: item.fontStack || "'Sora', sans-serif",
+          color: item.inkColor || '#1a1f3d',
+          paper: FocylLibraries.assetUrl('papers', item.asset),
+          lineHeight: item.lineHeight || 32
+        },
+        w: item.w || 300, h: item.h || 220
+      });
+      closeSheet();
     });
+
+    // STICKY NOTES
+    await mount('#panelNotes', 'notes', item => {
+      addTile({
+        type: 'note', library_id: item.library_id, asset_id: item.asset_id,
+        content: {
+          text: '', color: item.color || '#F7E06A',
+          asset: item.asset ? FocylLibraries.assetUrl('notes', item.asset) : null,
+          inkColor: item.inkColor || '#2a2410',
+          maxChars: item.maxChars || 120
+        },
+        w: item.w || 180, h: item.h || 180,
+        rotation: (Math.random() * 6) - 3
+      });
+      closeSheet();
+    });
+
+    // RIBBONS
+    await mount('#panelRibbons', 'ribbons', item => {
+      addTile({
+        type: 'ribbon', library_id: item.library_id, asset_id: item.asset_id,
+        content: {
+          asset: FocylLibraries.assetUrl('ribbons', item.asset),
+          text: 'Goal', textBox: item.textBox || null,
+          inkColor: item.inkColor || '#FFFFFF'
+        },
+        w: item.w || 260, h: item.h || 90
+      });
+      closeSheet();
+    });
+
+    // CANVASES — the board substrate, not a tile
+    await mount('#panelCanvases', 'canvases', item => {
+      board.canvas_id = item.asset_id;
+      applyCanvas(item);
+      saveBoard();
+      setStatus('Canvas applied');
+      closeSheet();
+    });
+
+    // BORDERS — board edge and image frame
+    await mount('#panelBordersBoard', 'borders_board', item => {
+      board.border_id = item.asset_id;
+      applyBoardBorder(item);
+      saveBoard();
+      setStatus('Border applied');
+      closeSheet();
+    });
+
+    await mount('#panelBordersImage', 'borders_image', item => {
+      if (!selectedTile || selectedTile.type !== 'image') {
+        alert('Tap an image tile first, then choose a frame.');
+        return;
+      }
+      selectedTile.content.frame = {
+        asset: FocylLibraries.assetUrl('borders_image', item.asset),
+        slice: item.slice || 24, padding: item.padding || 0
+      };
+      renderAll();
+      saveBoard();
+      setStatus('Frame applied');
+      closeSheet();
+    });
+
+    // Reapply whatever the board was saved with
+    if (board?.canvas_id) {
+      const c = (await FocylLibraries.items('canvases')).find(i => i.id === board.canvas_id);
+      if (c) applyCanvas(c);
+    }
+    if (board?.border_id) {
+      const b = (await FocylLibraries.items('borders_board')).find(i => i.id === board.border_id);
+      if (b) applyBoardBorder(b);
+    }
+    log('Libraries mounted');
+  }
+
+  function applyCanvas(item) {
+    if (item.asset) {
+      canvas.style.backgroundImage = `url('${FocylLibraries.assetUrl('canvases', item.asset)}')`;
+      canvas.style.backgroundRepeat = item.tileable ? 'repeat' : 'no-repeat';
+      canvas.style.backgroundSize = item.tileable ? 'auto' : '100% 100%';
+      canvas.style.backgroundColor = item.fill || 'transparent';
+    } else {
+      canvas.style.backgroundImage = '';
+      canvas.style.background = item.fill || 'transparent';
+    }
+  }
+
+  function applyBoardBorder(item) {
+    if (!item.asset) { canvas.style.borderImage = ''; canvas.style.border = ''; return; }
+    const url = FocylLibraries.assetUrl('borders_board', item.asset);
+    const slice = item.slice || 30;
+    canvas.style.borderStyle = 'solid';
+    canvas.style.borderWidth = slice + 'px';
+    canvas.style.borderImageSource = `url('${url}')`;
+    canvas.style.borderImageSlice = String(slice);
+    canvas.style.borderImageRepeat = 'stretch';
+  }
+
+  window.addEventListener('DOMContentLoaded', () => {
+    initTypeControls();
+    initLibraries();
   });
 
   // Autosave only when something actually changed — an idle board
