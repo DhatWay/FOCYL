@@ -11,19 +11,11 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Sora:wght@400;500;600&family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
   <style>
-    /* ============================================================
-       ORIGINAL 3D / RADIANT DESIGN – UNTOUCHED
-       ============================================================ */
+    /* ===== YOUR ORIGINAL DESIGN – UNTOUCHED ===== */
     :root {
-      --void: #070914;
-      --ink: #0d1224;
-      --ink-2: #121a34;
-      --line: rgba(237,239,247,0.09);
-      --paper: #EDEFF7;
-      --mist: #9AA4C7;
-      --cyan: #35D8F0;
-      --violet: #8B7CF6;
-      --magenta: #EA4FC9;
+      --void: #070914; --ink: #0d1224; --ink-2: #121a34;
+      --line: rgba(237,239,247,0.09); --paper: #EDEFF7; --mist: #9AA4C7;
+      --cyan: #35D8F0; --violet: #8B7CF6; --magenta: #EA4FC9;
       --grad: linear-gradient(135deg, var(--cyan), var(--violet) 55%, var(--magenta));
       --glow: 0 0 40px rgba(139,124,246,0.3);
       --display: 'Space Grotesk', sans-serif;
@@ -34,27 +26,18 @@
     * { box-sizing: border-box; }
     html, body { height: 100%; margin: 0; }
     body {
-      background: var(--void);
-      color: var(--paper);
-      font-family: var(--body);
-      overflow: hidden;
+      background: var(--void); color: var(--paper);
+      font-family: var(--body); overflow: hidden;
       -webkit-tap-highlight-color: transparent;
     }
-
     body::before, body::after {
-      content: "";
-      position: fixed;
-      width: 60vmax; height: 60vmax;
-      border-radius: 50%;
-      filter: blur(90px);
-      opacity: 0.14;
-      pointer-events: none;
-      z-index: 0;
+      content: ""; position: fixed; width: 60vmax; height: 60vmax;
+      border-radius: 50%; filter: blur(90px); opacity: 0.14;
+      pointer-events: none; z-index: 0;
     }
     body::before { top: -20vmax; left: -15vmax; background: var(--cyan); }
     body::after { bottom: -25vmax; right: -20vmax; background: var(--magenta); }
 
-    /* Topbar */
     .topbar {
       position: fixed; top: 0; left: 0; right: 0; z-index: 20;
       display: flex; align-items: center; justify-content: space-between;
@@ -63,20 +46,10 @@
       backdrop-filter: blur(12px);
       border-bottom: 1px solid var(--line);
     }
-    .topbar .back {
-      background: transparent; border: none;
-      color: var(--mist); font-size: 0.85rem; cursor: pointer;
-      font-family: inherit;
-    }
-    .topbar .title {
-      font-family: var(--display); font-weight: 600; font-size: 1rem;
-      background: var(--grad); -webkit-background-clip: text; background-clip: text; color: transparent;
-    }
-    .topbar .status {
-      font-family: var(--mono); font-size: 0.68rem; color: var(--mist);
-    }
+    .topbar .back { background: transparent; border: none; color: var(--mist); font-size: 0.85rem; cursor: pointer; font-family: inherit; }
+    .topbar .title { font-family: var(--display); font-weight: 600; font-size: 1rem; background: var(--grad); -webkit-background-clip: text; background-clip: text; color: transparent; }
+    .topbar .status { font-family: var(--mono); font-size: 0.68rem; color: var(--mist); }
 
-    /* Canvas */
     .canvas-wrap {
       position: absolute; inset: 0; top: 60px; overflow: auto;
       -webkit-overflow-scrolling: touch;
@@ -94,13 +67,12 @@
     .canvas::before { top: -200px; left: -200px; background: var(--cyan); }
     .canvas::after { bottom: -200px; right: -200px; background: var(--magenta); }
 
-    /* Tiles – 3D depth */
     .tile {
       position: absolute; border-radius: 16px;
       border: 1px solid var(--line);
       box-shadow: 0 14px 30px -16px rgba(0,0,0,0.7), var(--glow);
       touch-action: none; cursor: grab; overflow: hidden;
-      background-size: contain; /* FIX: show full image without cropping */
+      background-size: contain;
       background-repeat: no-repeat;
       background-position: center;
       background-color: var(--ink);
@@ -109,7 +81,6 @@
     .tile:active { cursor: grabbing; }
     .tile.dragging { z-index: 50; box-shadow: 0 24px 50px -18px rgba(0,0,0,0.85), 0 0 60px rgba(139,124,246,0.2); }
 
-    /* Text tile – pure text, no background */
     .tile.text-tile {
       background: transparent !important;
       border: none !important;
@@ -131,9 +102,7 @@
       align-items: center;
       justify-content: center;
     }
-    .tile.text-tile .text-content:focus {
-      outline: 2px solid var(--violet);
-    }
+    .tile.text-tile .text-content:focus { outline: 2px solid var(--violet); }
 
     .tile .del {
       position: absolute; top: 6px; right: 6px; width: 22px; height: 22px;
@@ -146,7 +115,6 @@
     }
     .tile:hover .del, .tile.dragging .del { opacity: 1; }
 
-    /* Audio tile */
     .tile.audio-tile {
       background: var(--ink-2);
       display: flex; flex-direction: column;
@@ -154,22 +122,11 @@
       padding: 12px;
       cursor: pointer;
     }
-    .tile.audio-tile .play-btn {
-      font-size: 2rem; margin-bottom: 6px;
-      filter: drop-shadow(0 0 10px rgba(53,216,240,0.3));
-    }
-    .tile.audio-tile .progress-bar {
-      width: 80%; height: 4px; background: var(--line); border-radius: 4px; overflow: hidden;
-    }
-    .tile.audio-tile .progress-bar .fill {
-      height: 100%; width: 0%; background: var(--grad);
-    }
-    .tile.audio-tile .audio-label {
-      font-size: 0.7rem; color: var(--mist); margin-top: 4px;
-      max-width: 90%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-    }
+    .tile.audio-tile .play-btn { font-size: 2rem; margin-bottom: 6px; filter: drop-shadow(0 0 10px rgba(53,216,240,0.3)); }
+    .tile.audio-tile .progress-bar { width: 80%; height: 4px; background: var(--line); border-radius: 4px; overflow: hidden; }
+    .tile.audio-tile .progress-bar .fill { height: 100%; width: 0%; background: var(--grad); }
+    .tile.audio-tile .audio-label { font-size: 0.7rem; color: var(--mist); margin-top: 4px; max-width: 90%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
-    /* Resize handle (for text and image tiles) */
     .resize-handle {
       position: absolute; bottom: 0; right: 0;
       width: 20px; height: 20px;
@@ -183,7 +140,6 @@
     }
     .tile:hover .resize-handle { opacity: 0.8; }
 
-    /* FAB */
     .fab {
       position: fixed; right: 20px; bottom: 26px; z-index: 20;
       width: 58px; height: 58px; border-radius: 50%;
@@ -193,7 +149,6 @@
     }
     .fab svg { width: 22px; height: 22px; stroke: #070914; stroke-width: 2.4; }
 
-    /* Sheet */
     .scrim {
       position: fixed; inset: 0; background: rgba(7,9,20,0.6);
       z-index: 30; opacity: 0; pointer-events: none;
@@ -262,21 +217,13 @@
     .font-size-control {
       display: flex; align-items: center; gap: 10px;
     }
-    .font-size-control input[type="range"] {
-      flex: 1; margin: 0;
-    }
-    .font-size-control span {
-      font-family: var(--mono); font-size: 0.9rem; min-width: 40px;
-    }
+    .font-size-control input[type="range"] { flex: 1; margin: 0; }
+    .font-size-control span { font-family: var(--mono); font-size: 0.9rem; min-width: 40px; }
 
-    .crop-row {
-      display: flex; gap: 10px;
-    }
+    .crop-row { display: flex; gap: 10px; }
     .crop-row input { flex: 1; }
 
-    @media (max-width: 600px) {
-      .sheet { padding: 16px; }
-    }
+    @media (max-width: 600px) { .sheet { padding: 16px; } }
 
     .tile .redesign-btn {
       position: absolute; bottom: 8px; left: 50%; transform: translateX(-50%);
@@ -286,13 +233,24 @@
       z-index: 6; font-family: inherit;
     }
     .tile:hover .redesign-btn { opacity: 1; }
+
+    /* DEBUG LOG – shows on screen */
+    #debug {
+      position: fixed; bottom: 80px; left: 20px; z-index: 999;
+      background: rgba(0,0,0,0.8); color: #0f0; padding: 8px 12px;
+      font-family: monospace; font-size: 0.7rem;
+      border-radius: 8px; max-width: 80%;
+      pointer-events: none;
+      white-space: pre-wrap;
+      word-break: break-all;
+    }
   </style>
 </head>
 <body>
 
 <!-- TOPBAR -->
 <div class="topbar">
-  <button class="back" id="backBtn">← Focyl</button>
+  <button class="back" id="backBtn" onclick="window.location.href='index.html'">← Focyl</button>
   <span class="title" id="boardTitle">My Board</span>
   <span class="status" id="statusText">Ready</span>
 </div>
@@ -302,33 +260,33 @@
   <div class="canvas" id="canvas"></div>
 </div>
 
-<!-- FAB -->
-<button class="fab" id="fabBtn" aria-label="Add tile">
+<!-- FAB – uses onclick as backup -->
+<button class="fab" id="fabBtn" aria-label="Add tile" onclick="openSheet()">
   <svg viewBox="0 0 24 24" fill="none" stroke="#070914" stroke-width="2.4" stroke-linecap="round">
     <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
   </svg>
 </button>
 
 <!-- SHEET -->
-<div class="scrim" id="scrim"></div>
+<div class="scrim" id="scrim" onclick="closeSheet()"></div>
 <div class="sheet" id="sheet">
   <div class="grabber"></div>
   <div class="tabs">
-    <button class="tab active" id="tabPhoto">Photo</button>
-    <button class="tab" id="tabWords">Words</button>
-    <button class="tab" id="tabAudio">Audio</button>
-    <button class="tab" id="tabSettings">Settings</button>
+    <button class="tab active" id="tabPhoto" onclick="switchTab('photo')">Photo</button>
+    <button class="tab" id="tabWords" onclick="switchTab('words')">Words</button>
+    <button class="tab" id="tabAudio" onclick="switchTab('audio')">Audio</button>
+    <button class="tab" id="tabSettings" onclick="switchTab('settings')">Settings</button>
   </div>
 
   <div class="panel active" id="panelPhoto">
     <label for="photoQuery">Search free photos</label>
     <input type="text" id="photoQuery" placeholder="studio, mid thirties…">
-    <button class="btn-primary" id="searchBtn">Search</button>
+    <button class="btn-primary" id="searchBtn" onclick="doSearch()">Search</button>
     <div class="results" id="results"></div>
     <p class="hint" id="photoHint"></p>
     <label>Or use your own</label>
-    <button class="btn-ghost" id="uploadBtn">Upload from device (resized)</button>
-    <input type="file" id="fileInput" accept="image/*">
+    <button class="btn-ghost" id="uploadBtn" onclick="document.getElementById('fileInput').click()">Upload from device (resized)</button>
+    <input type="file" id="fileInput" accept="image/*" onchange="handleFileUpload(event)">
   </div>
 
   <div class="panel" id="panelWords">
@@ -336,7 +294,7 @@
     <textarea id="quoteText" rows="2" placeholder="I run my own studio."></textarea>
     <div class="font-size-control">
       <label>Font size</label>
-      <input type="range" id="textSizeSlider" min="12" max="120" value="32">
+      <input type="range" id="textSizeSlider" min="12" max="120" value="32" oninput="document.getElementById('textSizeDisplay').textContent=this.value+'px'">
       <span id="textSizeDisplay">32px</span>
     </div>
     <label>Font family</label>
@@ -349,13 +307,13 @@
       <option value="'Georgia', serif">Georgia</option>
       <option value="'Arial', sans-serif">Arial</option>
     </select>
-    <button class="btn-primary" id="addTextBtn">Add Text Tile</button>
+    <button class="btn-primary" id="addTextBtn" onclick="addTextTile()">Add Text Tile</button>
   </div>
 
   <div class="panel" id="panelAudio">
     <label>Upload an MP3 from your device</label>
-    <button class="btn-ghost" id="uploadAudioBtn">Choose MP3</button>
-    <input type="file" id="audioInput" accept="audio/*">
+    <button class="btn-ghost" id="uploadAudioBtn" onclick="document.getElementById('audioInput').click()">Choose MP3</button>
+    <input type="file" id="audioInput" accept="audio/*" onchange="handleAudioUpload(event)">
     <p class="hint">Tap the tile to play/pause.</p>
   </div>
 
@@ -365,146 +323,28 @@
       <input type="number" id="canvasWidth" value="1600" step="100" min="600">
       <input type="number" id="canvasHeight" value="1600" step="100" min="600">
     </div>
-    <button class="btn-primary" id="resizeCanvasBtn">Resize Board</button>
+    <button class="btn-primary" id="resizeCanvasBtn" onclick="resizeCanvas()">Resize Board</button>
     <hr style="border-color:var(--line);margin:16px 0;">
     <label>AI Redesign (image tiles)</label>
     <p class="hint">Click the ✨ button on any image tile.</p>
   </div>
 </div>
 
+<!-- DEBUG LOG -->
+<div id="debug">⏳ Loading...</div>
+
 <script>
   // ================================================================
-  //  1. IMMEDIATE UI EVENT LISTENERS (attached before anything else)
+  //  DEBUG HELPER
   // ================================================================
-  document.addEventListener('DOMContentLoaded', function() {
-    console.log('DOM ready – attaching UI listeners');
-
-    // ----- SHEET -----
-    const fab = document.getElementById('fabBtn');
-    const scrim = document.getElementById('scrim');
-    const sheet = document.getElementById('sheet');
-    if (fab) fab.addEventListener('click', () => {
-      sheet.classList.add('open');
-      scrim.classList.add('open');
-    });
-    if (scrim) scrim.addEventListener('click', () => {
-      sheet.classList.remove('open');
-      scrim.classList.remove('open');
-    });
-
-    // ----- TABS -----
-    const tabs = document.querySelectorAll('.tab');
-    const panels = {
-      photo: document.getElementById('panelPhoto'),
-      words: document.getElementById('panelWords'),
-      audio: document.getElementById('panelAudio'),
-      settings: document.getElementById('panelSettings'),
-    };
-    tabs.forEach(tab => {
-      tab.addEventListener('click', function() {
-        tabs.forEach(t => t.classList.remove('active'));
-        this.classList.add('active');
-        Object.values(panels).forEach(p => p.classList.remove('active'));
-        const panelId = this.id.replace('tab', 'panel').toLowerCase();
-        if (panels[panelId]) panels[panelId].classList.add('active');
-      });
-    });
-
-    // ----- SEARCH -----
-    const searchBtn = document.getElementById('searchBtn');
-    if (searchBtn) {
-      searchBtn.addEventListener('click', function() {
-        const q = document.getElementById('photoQuery').value.trim();
-        if (q) searchPhotos(q);
-      });
-    }
-
-    // ----- UPLOAD IMAGE -----
-    const uploadBtn = document.getElementById('uploadBtn');
-    const fileInput = document.getElementById('fileInput');
-    if (uploadBtn) {
-      uploadBtn.addEventListener('click', () => fileInput.click());
-    }
-    if (fileInput) {
-      fileInput.addEventListener('change', function(e) {
-        handleFileUpload(e);
-        this.value = '';
-      });
-    }
-
-    // ----- TEXT TILE -----
-    const addTextBtn = document.getElementById('addTextBtn');
-    if (addTextBtn) {
-      addTextBtn.addEventListener('click', function() {
-        const text = document.getElementById('quoteText').value.trim() || 'Your vision';
-        const fontSize = parseInt(document.getElementById('textSizeSlider').value) || 32;
-        const fontFamily = document.getElementById('fontFamilySelect').value;
-        addTile({
-          type: 'text',
-          content: { text, fontSize, fontFamily, color: '#EDEFF7' },
-          w: Math.max(120, text.length * 10),
-          h: fontSize * 2 + 20,
-        });
-        sheet.classList.remove('open');
-        scrim.classList.remove('open');
-      });
-    }
-
-    const slider = document.getElementById('textSizeSlider');
-    const display = document.getElementById('textSizeDisplay');
-    if (slider && display) {
-      slider.addEventListener('input', () => {
-        display.textContent = slider.value + 'px';
-      });
-    }
-
-    // ----- AUDIO -----
-    const audioUploadBtn = document.getElementById('uploadAudioBtn');
-    const audioInput = document.getElementById('audioInput');
-    if (audioUploadBtn) {
-      audioUploadBtn.addEventListener('click', () => audioInput.click());
-    }
-    if (audioInput) {
-      audioInput.addEventListener('change', function(e) {
-        handleAudioUpload(e);
-        this.value = '';
-      });
-    }
-
-    // ----- CANVAS RESIZE -----
-    const resizeBtn = document.getElementById('resizeCanvasBtn');
-    if (resizeBtn) {
-      resizeBtn.addEventListener('click', function() {
-        const w = parseInt(document.getElementById('canvasWidth').value);
-        const h = parseInt(document.getElementById('canvasHeight').value);
-        if (w < 200 || h < 200) return;
-        if (board) {
-          board.width = w;
-          board.height = h;
-          canvas.style.width = w + 'px';
-          canvas.style.height = h + 'px';
-          localStorage.setItem(`focyl_board_size_${session.id}`, JSON.stringify({ w, h }));
-          setStatus('Canvas resized');
-          sheet.classList.remove('open');
-          scrim.classList.remove('open');
-        }
-      });
-    }
-
-    // ----- BACK BUTTON -----
-    const backBtn = document.getElementById('backBtn');
-    if (backBtn) {
-      backBtn.addEventListener('click', () => {
-        window.location.href = 'index.html';
-      });
-    }
-
-    // Now load board data
-    loadBoard();
-  });
+  function log(msg) {
+    const d = document.getElementById('debug');
+    if (d) d.textContent = msg;
+    console.log(msg);
+  }
 
   // ================================================================
-  //  2. SUPABASE & BOARD LOGIC (with fallbacks)
+  //  CONFIG
   // ================================================================
   const SUPABASE_URL = 'https://ufkgmldvclvkzvznsxbs.supabase.co';
   const SUPABASE_ANON_KEY = 'YOUR_SUPABASE_ANON_KEY'; // <-- REPLACE
@@ -516,16 +356,31 @@
     hfModel: 'stabilityai/stable-diffusion-2-1',
   };
 
+  // ================================================================
+  //  SESSION
+  // ================================================================
   const session = JSON.parse(localStorage.getItem('focyl_user') || 'null');
   if (!session) {
-    // Will redirect inside loadBoard if needed
+    log('No session, redirecting to auth...');
+    window.location.href = 'auth.html';
+  } else {
+    log('Session found: ' + session.email);
   }
 
+  // ================================================================
+  //  SUPABASE CLIENT
+  // ================================================================
   let sb = null;
   try {
     sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-  } catch (e) { console.warn('Supabase init failed', e); }
+    log('Supabase client created');
+  } catch (e) {
+    log('Supabase init error: ' + e.message);
+  }
 
+  // ================================================================
+  //  STATE
+  // ================================================================
   let board = null;
   let tiles = [];
   let boardId = null;
@@ -533,16 +388,46 @@
   const canvas = document.getElementById('canvas');
   const canvasWrap = document.getElementById('canvasWrap');
   const statusText = document.getElementById('statusText');
-  function setStatus(t) { if (statusText) statusText.textContent = t; }
+  function setStatus(t) { if (statusText) statusText.textContent = t; log('Status: ' + t); }
 
   // ================================================================
-  //  3. LOAD BOARD
+  //  SHEET CONTROLS (called from onclick)
+  // ================================================================
+  window.openSheet = function() {
+    document.getElementById('sheet').classList.add('open');
+    document.getElementById('scrim').classList.add('open');
+    log('Sheet opened');
+  };
+  window.closeSheet = function() {
+    document.getElementById('sheet').classList.remove('open');
+    document.getElementById('scrim').classList.remove('open');
+    log('Sheet closed');
+  };
+
+  // ================================================================
+  //  TAB SWITCH (called from onclick)
+  // ================================================================
+  window.switchTab = function(panelId) {
+    const tabs = document.querySelectorAll('.tab');
+    const panels = {
+      photo: document.getElementById('panelPhoto'),
+      words: document.getElementById('panelWords'),
+      audio: document.getElementById('panelAudio'),
+      settings: document.getElementById('panelSettings'),
+    };
+    tabs.forEach(t => t.classList.remove('active'));
+    const activeTab = document.getElementById('tab' + panelId.charAt(0).toUpperCase() + panelId.slice(1));
+    if (activeTab) activeTab.classList.add('active');
+    Object.values(panels).forEach(p => p.classList.remove('active'));
+    if (panels[panelId]) panels[panelId].classList.add('active');
+    log('Switched to ' + panelId);
+  };
+
+  // ================================================================
+  //  LOAD BOARD
   // ================================================================
   async function loadBoard() {
-    if (!session) {
-      window.location.href = 'auth.html';
-      return;
-    }
+    log('Loading board...');
     try {
       if (sb) {
         const { data: boardData, error: boardError } = await sb
@@ -564,41 +449,47 @@
           tiles = tileData || [];
           renderAll();
           setStatus('Loaded from Supabase');
+          log('Loaded ' + tiles.length + ' tiles from Supabase');
           return;
         }
       }
-      // Fallback to localStorage
+      // fallback localStorage
       const localBoard = JSON.parse(localStorage.getItem(`focyl_board_${session.email}`) || 'null');
       if (localBoard) {
         board = { ...localBoard, id: 'local' };
         tiles = localBoard.tiles || [];
         renderAll();
         setStatus('Loaded from localStorage');
+        log('Loaded ' + tiles.length + ' tiles from localStorage');
         return;
       }
       board = { title: 'My Board', width: 1600, height: 1600 };
       tiles = [];
       renderAll();
       setStatus('New board');
+      log('New board created');
     } catch (err) {
-      console.error('Load error:', err);
+      log('Load error: ' + err.message);
+      // fallback
       const localBoard = JSON.parse(localStorage.getItem(`focyl_board_${session.email}`) || 'null');
       if (localBoard) {
         board = { ...localBoard, id: 'local' };
         tiles = localBoard.tiles || [];
         renderAll();
         setStatus('Loaded from localStorage (fallback)');
+        log('Fallback loaded ' + tiles.length + ' tiles');
       } else {
         board = { title: 'My Board', width: 1600, height: 1600 };
         tiles = [];
         renderAll();
         setStatus('New board (fallback)');
+        log('Fallback new board');
       }
     }
   }
 
   // ================================================================
-  //  4. SAVE BOARD
+  //  SAVE BOARD
   // ================================================================
   async function saveBoard() {
     if (!board) return;
@@ -622,6 +513,7 @@
           if (insertError) throw insertError;
         }
         setStatus('Saved to Supabase');
+        log('Saved to Supabase, ' + tiles.length + ' tiles');
       } else {
         const boardData = {
           title: board.title,
@@ -631,9 +523,10 @@
         };
         localStorage.setItem(`focyl_board_${session.email}`, JSON.stringify(boardData));
         setStatus('Saved to localStorage');
+        log('Saved to localStorage');
       }
     } catch (err) {
-      console.error('Save error:', err);
+      log('Save error: ' + err.message);
       const boardData = {
         title: board.title,
         tiles: tiles,
@@ -646,7 +539,7 @@
   }
 
   // ================================================================
-  //  5. RENDER
+  //  RENDER
   // ================================================================
   function renderAll() {
     const w = board?.width || 1600;
@@ -657,6 +550,7 @@
     tiles.forEach(renderTile);
     canvasWrap.scrollLeft = w / 2 - canvasWrap.clientWidth / 2;
     canvasWrap.scrollTop = h / 2 - canvasWrap.clientHeight / 2;
+    log('Rendered ' + tiles.length + ' tiles');
   }
 
   function renderTile(t) {
@@ -670,7 +564,13 @@
 
     if (t.type === 'image') {
       el.style.backgroundImage = `url('${t.content.url}')`;
-      // background-size: contain is set globally on .tile, so no cropping
+      // resize handle
+      const handle = document.createElement('div');
+      handle.className = 'resize-handle';
+      handle.addEventListener('mousedown', (e) => { e.stopPropagation(); startResize(e, el, t); });
+      handle.addEventListener('touchstart', (e) => { e.stopPropagation(); startResize(e, el, t); });
+      el.appendChild(handle);
+      // AI redesign button
       const aiBtn = document.createElement('button');
       aiBtn.className = 'redesign-btn';
       aiBtn.textContent = '✨ Redesign';
@@ -679,11 +579,6 @@
         redesignImageTile(t.id);
       });
       el.appendChild(aiBtn);
-      const handle = document.createElement('div');
-      handle.className = 'resize-handle';
-      handle.addEventListener('mousedown', (e) => { e.stopPropagation(); startResize(e, el, t); });
-      handle.addEventListener('touchstart', (e) => { e.stopPropagation(); startResize(e, el, t); });
-      el.appendChild(handle);
     } else if (t.type === 'text') {
       el.classList.add('text-tile');
       const content = document.createElement('div');
@@ -750,6 +645,7 @@
       el._audio = audio;
     }
 
+    // Delete button
     const del = document.createElement('div');
     del.className = 'del';
     del.textContent = '×';
@@ -766,7 +662,7 @@
   }
 
   // ================================================================
-  //  6. DRAG & RESIZE
+  //  DRAG & RESIZE
   // ================================================================
   function makeDraggable(el, id) {
     let startX, startY, origLeft, origTop, dragging = false;
@@ -830,7 +726,7 @@
   }
 
   // ================================================================
-  //  7. ADD TILE
+  //  ADD TILE
   // ================================================================
   function addTile(partial) {
     const newTile = {
@@ -848,55 +744,33 @@
     renderTile(newTile);
     saveBoard();
     setStatus('Added');
+    log('Added tile: ' + newTile.type);
   }
 
   // ================================================================
-  //  8. PHOTO SEARCH
+  //  BUTTON CALLBACKS (exposed to onclick)
   // ================================================================
-  async function searchPhotos(query) {
-    const hint = document.getElementById('photoHint');
-    const results = document.getElementById('results');
-    results.innerHTML = '';
-    hint.textContent = 'Searching...';
-    if (TILE_CONFIG.unsplashKey) {
-      try {
-        const res = await fetch(`https://api.unsplash.com/search/photos?query=${encodeURIComponent(query)}&per_page=9&client_id=${TILE_CONFIG.unsplashKey}`);
-        const data = await res.json();
-        (data.results || []).forEach(p => addResultThumb(p.urls.small, p.urls.regular));
-        hint.textContent = '';
-      } catch (e) { hint.textContent = 'Unsplash error'; }
-      return;
-    }
-    if (TILE_CONFIG.pexelsKey) {
-      try {
-        const res = await fetch(`https://api.pexels.com/v1/search?query=${encodeURIComponent(query)}&per_page=9`, {
-          headers: { Authorization: TILE_CONFIG.pexelsKey }
-        });
-        const data = await res.json();
-        (data.photos || []).forEach(p => addResultThumb(p.src.medium, p.src.large));
-        hint.textContent = '';
-      } catch (e) { hint.textContent = 'Pexels error'; }
-      return;
-    }
-    hint.textContent = 'No photo API key set – add one in TILE_CONFIG.';
-  }
+  window.doSearch = function() {
+    const q = document.getElementById('photoQuery').value.trim();
+    if (q) searchPhotos(q);
+    else log('Search query empty');
+  };
 
-  function addResultThumb(thumbUrl, fullUrl) {
-    const div = document.createElement('div');
-    div.className = 'thumb';
-    div.style.backgroundImage = `url('${thumbUrl}')`;
-    div.addEventListener('click', () => {
-      addTile({ type: 'image', content: { url: fullUrl }, source: 'api' });
-      document.getElementById('sheet').classList.remove('open');
-      document.getElementById('scrim').classList.remove('open');
+  window.addTextTile = function() {
+    const text = document.getElementById('quoteText').value.trim() || 'Your vision';
+    const fontSize = parseInt(document.getElementById('textSizeSlider').value) || 32;
+    const fontFamily = document.getElementById('fontFamilySelect').value;
+    addTile({
+      type: 'text',
+      content: { text, fontSize, fontFamily, color: '#EDEFF7' },
+      w: Math.max(120, text.length * 10),
+      h: fontSize * 2 + 20,
     });
-    document.getElementById('results').appendChild(div);
-  }
+    closeSheet();
+    log('Text tile added');
+  };
 
-  // ================================================================
-  //  9. IMAGE UPLOAD (resize)
-  // ================================================================
-  function handleFileUpload(e) {
+  window.handleFileUpload = function(e) {
     const file = e.target.files[0];
     if (!file) return;
     const reader = new FileReader();
@@ -913,18 +787,16 @@
         ctx.drawImage(img, 0, 0, w, h);
         const dataUrl = c.toDataURL('image/jpeg', 0.85);
         addTile({ type: 'image', content: { url: dataUrl }, source: 'upload' });
-        document.getElementById('sheet').classList.remove('open');
-        document.getElementById('scrim').classList.remove('open');
+        closeSheet();
+        log('Image uploaded and resized');
       };
       img.src = ev.target.result;
     };
     reader.readAsDataURL(file);
-  }
+    e.target.value = '';
+  };
 
-  // ================================================================
-  //  10. AUDIO UPLOAD
-  // ================================================================
-  function handleAudioUpload(e) {
+  window.handleAudioUpload = function(e) {
     const file = e.target.files[0];
     if (!file) return;
     const reader = new FileReader();
@@ -936,14 +808,77 @@
         w: 180,
         h: 120,
       });
-      document.getElementById('sheet').classList.remove('open');
-      document.getElementById('scrim').classList.remove('open');
+      closeSheet();
+      log('Audio uploaded');
     };
     reader.readAsDataURL(file);
+    e.target.value = '';
+  };
+
+  window.resizeCanvas = function() {
+    const w = parseInt(document.getElementById('canvasWidth').value);
+    const h = parseInt(document.getElementById('canvasHeight').value);
+    if (w < 200 || h < 200) return;
+    if (board) {
+      board.width = w;
+      board.height = h;
+      canvas.style.width = w + 'px';
+      canvas.style.height = h + 'px';
+      localStorage.setItem(`focyl_board_size_${session.id}`, JSON.stringify({ w, h }));
+      setStatus('Canvas resized');
+      closeSheet();
+      log('Canvas resized to ' + w + 'x' + h);
+    }
+  };
+
+  // ================================================================
+  //  PHOTO SEARCH (same as before)
+  // ================================================================
+  async function searchPhotos(query) {
+    const hint = document.getElementById('photoHint');
+    const results = document.getElementById('results');
+    results.innerHTML = '';
+    hint.textContent = 'Searching...';
+    if (TILE_CONFIG.unsplashKey) {
+      try {
+        const res = await fetch(`https://api.unsplash.com/search/photos?query=${encodeURIComponent(query)}&per_page=9&client_id=${TILE_CONFIG.unsplashKey}`);
+        const data = await res.json();
+        (data.results || []).forEach(p => addResultThumb(p.urls.small, p.urls.regular));
+        hint.textContent = '';
+        log('Unsplash search done');
+      } catch (e) { hint.textContent = 'Unsplash error'; log('Unsplash error: ' + e.message); }
+      return;
+    }
+    if (TILE_CONFIG.pexelsKey) {
+      try {
+        const res = await fetch(`https://api.pexels.com/v1/search?query=${encodeURIComponent(query)}&per_page=9`, {
+          headers: { Authorization: TILE_CONFIG.pexelsKey }
+        });
+        const data = await res.json();
+        (data.photos || []).forEach(p => addResultThumb(p.src.medium, p.src.large));
+        hint.textContent = '';
+        log('Pexels search done');
+      } catch (e) { hint.textContent = 'Pexels error'; log('Pexels error: ' + e.message); }
+      return;
+    }
+    hint.textContent = 'No photo API key set – add one in TILE_CONFIG.';
+    log('No photo API key');
+  }
+
+  function addResultThumb(thumbUrl, fullUrl) {
+    const div = document.createElement('div');
+    div.className = 'thumb';
+    div.style.backgroundImage = `url('${thumbUrl}')`;
+    div.addEventListener('click', () => {
+      addTile({ type: 'image', content: { url: fullUrl }, source: 'api' });
+      closeSheet();
+      log('Photo selected from search');
+    });
+    document.getElementById('results').appendChild(div);
   }
 
   // ================================================================
-  //  11. AI REDESIGN
+  //  AI REDESIGN
   // ================================================================
   async function redesignImageTile(tileId) {
     const tile = tiles.find(t => t.id === tileId);
@@ -972,30 +907,36 @@
       }
       saveBoard();
       setStatus('AI redesign complete');
+      log('AI redesign done');
     } catch (err) {
       alert('AI redesign failed: ' + err.message);
+      log('AI redesign error: ' + err.message);
     }
   }
 
   // ================================================================
-  //  12. AUTOSAVE
+  //  INIT
   // ================================================================
+  log('Script started');
+  loadBoard();
+
+  // Restore canvas size
+  const saved = localStorage.getItem(`focyl_board_size_${session?.id}`);
+  if (saved && board) {
+    try {
+      const { w, h } = JSON.parse(saved);
+      board.width = w;
+      board.height = h;
+      document.getElementById('canvasWidth').value = w;
+      document.getElementById('canvasHeight').value = h;
+    } catch (e) {}
+  }
+
+  // Autosave
   setInterval(saveBoard, 30000);
   window.addEventListener('beforeunload', () => { saveBoard(); });
 
-  // Restore canvas size from localStorage after load
-  document.addEventListener('DOMContentLoaded', function() {
-    const saved = localStorage.getItem(`focyl_board_size_${session?.id}`);
-    if (saved && board) {
-      try {
-        const { w, h } = JSON.parse(saved);
-        board.width = w;
-        board.height = h;
-        document.getElementById('canvasWidth').value = w;
-        document.getElementById('canvasHeight').value = h;
-      } catch (e) {}
-    }
-  });
+  log('Initialization complete');
 </script>
 </body>
 </html>
