@@ -1,5 +1,5 @@
 // sw.js – basic offline cache for Focyl
-const CACHE = 'focyl-v2';
+const CACHE = 'focyl-v1';
 const ASSETS = [
   '/',
   '/index.html',
