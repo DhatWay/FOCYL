@@ -1,6 +1,6 @@
 {
   "library": "borders_board",
-  "version": 1,
+  "version": 3,
   "updated": "2026-08-29",
   "categories": [
     "minimal",
@@ -11,5 +11,60 @@
     "torn-paper",
     "film-strip"
   ],
-  "items": []
+  "items": [
+    {
+      "id": "minimal",
+      "name": "Minimal",
+      "category": "minimal",
+      "asset": "assets/minimal.svg",
+      "slice": 6,
+      "thumb": "assets/minimal.svg",
+      "tier": "free"
+    },
+    {
+      "id": "neon",
+      "name": "Neon",
+      "category": "neon",
+      "asset": "assets/neon.svg",
+      "slice": 8,
+      "thumb": "assets/neon.svg",
+      "tier": "free"
+    },
+    {
+      "id": "wood",
+      "name": "Wood",
+      "category": "wood",
+      "asset": "assets/wood.svg",
+      "slice": 18,
+      "thumb": "assets/wood.svg",
+      "tier": "free"
+    },
+    {
+      "id": "gold-leaf",
+      "name": "Gold Leaf",
+      "category": "gold-leaf",
+      "asset": "assets/gold-leaf.svg",
+      "slice": 16,
+      "thumb": "assets/gold-leaf.svg",
+      "tier": "plus"
+    },
+    {
+      "id": "ornate",
+      "name": "Ornate",
+      "category": "ornate",
+      "asset": "assets/ornate.svg",
+      "slice": 16,
+      "thumb": "assets/ornate.svg",
+      "tier": "plus"
+    },
+    {
+      "id": "film-strip",
+      "name": "Film Strip",
+      "category": "film-strip",
+      "asset": "assets/film-strip.svg",
+      "slice": 20,
+      "thumb": "assets/film-strip.svg",
+      "tier": "film"
+    }
+  ]
 }
