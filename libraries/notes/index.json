@@ -1,6 +1,6 @@
 {
   "library": "notes",
-  "version": 1,
+  "version": 3,
   "updated": "2026-08-29",
   "categories": [
     "square",
@@ -10,5 +10,106 @@
     "index-card",
     "flag"
   ],
-  "items": []
+  "items": [
+    {
+      "id": "sq-yellow",
+      "name": "Yellow",
+      "category": "square",
+      "asset": "assets/square-yellow.svg",
+      "color": "#F7E06A",
+      "inkColor": "#2a2410",
+      "maxChars": 120,
+      "w": 180,
+      "h": 180,
+      "thumb": "assets/square-yellow.svg",
+      "tier": "free"
+    },
+    {
+      "id": "sq-pink",
+      "name": "Pink",
+      "category": "square",
+      "asset": "assets/square-pink.svg",
+      "color": "#F7A8C4",
+      "inkColor": "#3a1424",
+      "maxChars": 120,
+      "w": 180,
+      "h": 180,
+      "thumb": "assets/square-pink.svg",
+      "tier": "free"
+    },
+    {
+      "id": "sq-teal",
+      "name": "Teal",
+      "category": "square",
+      "asset": "assets/square-teal.svg",
+      "color": "#8FE3D8",
+      "inkColor": "#0f3630",
+      "maxChars": 120,
+      "w": 180,
+      "h": 180,
+      "thumb": "assets/square-teal.svg",
+      "tier": "free"
+    },
+    {
+      "id": "sq-lilac",
+      "name": "Lilac",
+      "category": "square",
+      "asset": "assets/square-lilac.svg",
+      "color": "#C9B8F7",
+      "inkColor": "#241a44",
+      "maxChars": 120,
+      "w": 180,
+      "h": 180,
+      "thumb": "assets/square-lilac.svg",
+      "tier": "free"
+    },
+    {
+      "id": "lined-note",
+      "name": "Lined Note",
+      "category": "lined",
+      "asset": "assets/lined-note.svg",
+      "inkColor": "#2a2410",
+      "maxChars": 140,
+      "w": 180,
+      "h": 180,
+      "thumb": "assets/lined-note.svg",
+      "tier": "free"
+    },
+    {
+      "id": "index-card",
+      "name": "Index Card",
+      "category": "index-card",
+      "asset": "assets/index-card.svg",
+      "inkColor": "#1a1f3d",
+      "maxChars": 180,
+      "w": 220,
+      "h": 140,
+      "thumb": "assets/index-card.svg",
+      "tier": "free"
+    },
+    {
+      "id": "torn-note",
+      "name": "Torn Scrap",
+      "category": "torn",
+      "asset": "assets/torn-note.svg",
+      "inkColor": "#3a2f18",
+      "maxChars": 110,
+      "w": 190,
+      "h": 150,
+      "thumb": "assets/torn-note.svg",
+      "tier": "plus"
+    },
+    {
+      "id": "tab-note",
+      "name": "Tabbed",
+      "category": "tab",
+      "asset": "assets/tab-note.svg",
+      "inkColor": "#16300c",
+      "maxChars": 130,
+      "w": 190,
+      "h": 170,
+      "thumb": "assets/tab-note.svg",
+      "tier": "plus"
+    }
+  ]
 }
