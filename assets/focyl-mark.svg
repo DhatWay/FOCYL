@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" role="img" aria-label="Focyl">
+  <defs>
+    <linearGradient id="focylGrad" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#35D8F0"/>
+      <stop offset="55%" stop-color="#8B7CF6"/>
+      <stop offset="100%" stop-color="#EA4FC9"/>
+    </linearGradient>
+    <path id="focylBlade" d="M 66,44 C 80,40 90,46 90,50 C 90,54 80,60 66,56 C 60,53 60,47 66,44 Z"/>
+  </defs>
+  <g fill="url(#focylGrad)">
+    <use href="#focylBlade" transform="rotate(-10 50 50)"/>
+    <use href="#focylBlade" transform="rotate(50 50 50)"/>
+    <use href="#focylBlade" transform="rotate(110 50 50)"/>
+    <use href="#focylBlade" transform="rotate(170 50 50)"/>
+    <use href="#focylBlade" transform="rotate(230 50 50)"/>
+    <use href="#focylBlade" transform="rotate(290 50 50)"/>
+  </g>
+  <circle cx="50" cy="50" r="6" fill="url(#focylGrad)"/>
+</svg>
