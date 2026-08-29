@@ -137,16 +137,21 @@
       justify-content: center;
       cursor: grab;
     }
+    .tile.text-tile {
+      /* Height follows the text; width is whatever fitText measured. */
+      height: auto !important;
+      align-items: flex-start;
+    }
     .tile.text-tile .text-content {
       outline: none;
       word-break: break-word;
+      overflow-wrap: anywhere;
       text-align: center;
       line-height: 1.2;
       width: 100%;
-      height: 100%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
+      padding: var(--text-pad, 10px);
+      box-sizing: border-box;
+      white-space: pre-wrap;
     }
     .tile.text-tile .text-content:focus { outline: 2px solid var(--violet); }
 
@@ -316,6 +321,17 @@
       font-size: 0.9rem; cursor: pointer; margin-bottom: 10px;
     }
     .hint { font-family: var(--mono); font-size: 0.75rem; color: var(--mist); margin: 0 0 12px; }
+    .size-presets { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+    .size-presets button {
+      background: var(--ink-2); border: 1px solid var(--line); color: var(--mist);
+      border-radius: 10px; padding: 9px 6px; cursor: pointer; font-family: inherit;
+      display: flex; flex-direction: column; gap: 2px; align-items: center;
+    }
+    .size-presets button strong { font-size: .74rem; color: var(--paper); font-weight: 600; }
+    .size-presets button span   { font-size: .58rem; font-family: var(--mono); opacity: .75; }
+    .size-presets button.active { border-color: var(--violet); background: rgba(139,124,246,.14); }
+    .size-presets button:hover  { border-color: var(--violet); }
+
     .cat-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 12px; }
     .cat-chips button {
       font-family: var(--mono); font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.06em;
@@ -427,7 +443,8 @@
 <div class="sheet" id="sheet">
   <div class="grabber"></div>
   <div class="tabs" id="sheetTabs">
-    <button class="tab active" id="tabPhoto"    onclick="switchTab('photo')">Photo</button>
+    <button class="tab active" id="tabTemplates" onclick="switchTab('templates')">Templates</button>
+    <button class="tab" id="tabPhoto"    onclick="switchTab('photo')">Photo</button>
     <button class="tab" id="tabWords"     onclick="switchTab('words')">Words</button>
     <button class="tab" id="tabFonts"     onclick="switchTab('fonts')">Fonts</button>
     <button class="tab" id="tabPapers"    onclick="switchTab('papers')">Papers</button>
@@ -439,7 +456,12 @@
     <button class="tab" id="tabSettings"  onclick="switchTab('settings')">Settings</button>
   </div>
 
-  <div class="panel active" id="panelPhoto">
+  <div class="panel active" id="panelTemplates">
+    <p class="hint">Start from a layout, then make it yours. Applying a template
+       adds its tiles to the current board — it does not erase what you have.</p>
+  </div>
+
+  <div class="panel" id="panelPhoto">
     <label for="photoQuery">Search free photos</label>
     <input type="text" id="photoQuery" placeholder="studio, mid thirties…">
     <div class="cat-chips" id="photoChips"></div>
@@ -510,12 +532,15 @@
   </div>
 
   <div class="panel" id="panelSettings">
-    <label>Canvas Size (pixels)</label>
+    <label>Board size</label>
+    <div class="size-presets" id="sizePresets"></div>
+    <label style="margin-top:12px">Custom (pixels)</label>
     <div class="crop-row">
-      <input type="number" id="canvasWidth" value="1600" step="100" min="400">
-      <input type="number" id="canvasHeight" value="1600" step="100" min="400">
+      <input type="number" id="canvasWidth"  value="1080" step="20" min="400" max="6000">
+      <input type="number" id="canvasHeight" value="1350" step="20" min="400" max="6000">
     </div>
     <button class="btn-primary" id="resizeCanvasBtn" onclick="resizeCanvas()">Resize Board</button>
+    <p class="hint" id="sizeHint"></p>
     <hr style="border-color:var(--line);margin:16px 0;">
     <label>Display Name</label>
     <input type="text" id="displayNameInput" placeholder="Your display name" onchange="updateDisplayName()">
@@ -578,6 +603,23 @@
   // ================================================================
   let board = null;
   let tiles = [];
+  // ================================================================
+  //  Board defaults. 1600x1600 opened at 15% zoom on a phone, which is
+  //  why the canvas felt enormous and empty. 1080x1350 is the portrait
+  //  ratio people actually view, and lands near 100% on a phone.
+  // ================================================================
+  const DEFAULT_W = 1080;
+  const DEFAULT_H = 1350;
+
+  const SIZE_PRESETS = [
+    { id: 'phone',    label: 'Phone',        w: 1080, h: 1920, note: 'Lock screen' },
+    { id: 'portrait', label: 'Portrait',     w: 1080, h: 1350, note: 'Default' },
+    { id: 'square',   label: 'Square',       w: 1200, h: 1200, note: 'Social' },
+    { id: 'desktop',  label: 'Desktop',      w: 1920, h: 1080, note: 'Wallpaper' },
+    { id: 'print8',   label: 'Print 8×10"',  w: 2400, h: 3000, note: '300dpi' },
+    { id: 'print16',  label: 'Print 16×20"', w: 4800, h: 6000, note: '300dpi · Press' }
+  ];
+
   let selectedTile = null;   // last tapped tile; targets font + frame actions
   let boardId = null;
   let scale = 1;
@@ -717,8 +759,8 @@
   window.resetZoom = function() {
     scale = 1;
     applyZoom();
-    const w = board?.width || 1600;
-    const h = board?.height || 1600;
+    const w = board?.width || DEFAULT_W;
+    const h = board?.height || DEFAULT_H;
     canvasWrap.scrollLeft = (w * scale) / 2 - canvasWrap.clientWidth / 2;
     canvasWrap.scrollTop = (h * scale) / 2 - canvasWrap.clientHeight / 2;
   };
@@ -812,6 +854,7 @@
           tiles = tileData || [];
           restoreCanvasSize();
           renderAll();
+          requestAnimationFrame(fitToScreen);
           setStatus('Loaded from Supabase');
           log('Loaded ' + tiles.length + ' tiles from Supabase');
           return;
@@ -826,10 +869,11 @@
         log('Loaded ' + tiles.length + ' tiles from localStorage');
         return;
       }
-      board = { title: 'My Board', width: 1600, height: 1600 };
+      board = { title: 'My Board', width: DEFAULT_W, height: DEFAULT_H };
       tiles = [];
       restoreCanvasSize();
       renderAll();
+      requestAnimationFrame(fitToScreen);
       setStatus('New board');
       log('New board created');
     } catch (err) {
@@ -842,7 +886,7 @@
         setStatus('Loaded from localStorage (fallback)');
         log('Fallback loaded ' + tiles.length + ' tiles');
       } else {
-        board = { title: 'My Board', width: 1600, height: 1600 };
+        board = { title: 'My Board', width: DEFAULT_W, height: DEFAULT_H };
         tiles = [];
         renderAll();
         setStatus('New board (fallback)');
@@ -874,7 +918,7 @@
   function saveLocal() {
     try {
       localStorage.setItem(`focyl_board_${session.email}`, JSON.stringify({
-        title: board.title, tiles, width: board.width || 1600, height: board.height || 1600
+        title: board.title, tiles, width: board.width || DEFAULT_W, height: board.height || DEFAULT_H
       }));
       return true;
     } catch (err) {
@@ -944,8 +988,8 @@
   //  RENDER
   // ================================================================
   function renderAll() {
-    const w = board?.width || 1600;
-    const h = board?.height || 1600;
+    const w = board?.width || DEFAULT_W;
+    const h = board?.height || DEFAULT_H;
     canvas.style.width = w + 'px';
     canvas.style.height = h + 'px';
     canvas.innerHTML = '';
@@ -1008,10 +1052,16 @@
         content.style.padding = '14px';
       }
       content.addEventListener('input', () => {
-        t.content.text = content.textContent;
+        t.content.text = content.innerText;
+        fitText(t, el);
         saveBoard();
       });
       el.appendChild(content);
+      // Measure after the element is in the DOM and fonts have settled.
+      requestAnimationFrame(() => fitText(t, el));
+      if (document.fonts && document.fonts.ready) {
+        document.fonts.ready.then(() => fitText(t, el));
+      }
       // Pure text, no box — pinch/twist on the tile resizes and rotates it,
       // same as image tiles. Only button is delete (×).
     } else if (t.type === 'ribbon') {
@@ -1179,8 +1229,8 @@
         // away from your finger at any zoom other than 100%.
         let newX = origLeft + (e.clientX - startX) / scale;
         let newY = origTop  + (e.clientY - startY) / scale;
-        const bw = board?.width || 1600;
-        const bh = board?.height || 1600;
+        const bw = board?.width || DEFAULT_W;
+        const bh = board?.height || DEFAULT_H;
         newX = Math.max(0, Math.min(bw - tile.w, newX));
         newY = Math.max(0, Math.min(bh - tile.h, newY));
         el.style.left = newX + 'px';
@@ -1221,12 +1271,56 @@
   // ================================================================
   //  ADD TILE
   // ================================================================
+  // ================================================================
+  //  fitText — measures the rendered text and sizes the tile to it.
+  //  Runs on create, on every edit, and after a font or size change.
+  //  Without this a two-word tile keeps the same 300x220 default box.
+  // ================================================================
+  const TEXT_PAD = 10;
+  const TEXT_MIN_W = 80;
+  const TEXT_MAX_W = 640;
+
+  function fitText(t, el) {
+    const content = el.querySelector('.text-content');
+    if (!content) return;
+
+    // Measure in a detached span with identical typography and no wrapping,
+    // so we learn the natural single-line width of the longest line.
+    const probe = document.createElement('span');
+    probe.style.cssText =
+      'position:absolute;visibility:hidden;white-space:pre;left:-9999px;top:0;';
+    probe.style.fontFamily = content.style.fontFamily;
+    probe.style.fontSize   = content.style.fontSize;
+    probe.style.fontWeight = content.style.fontWeight || 'normal';
+    probe.style.letterSpacing = content.style.letterSpacing || 'normal';
+
+    const lines = (t.content.text || '').split('\n');
+    let widest = 0;
+    lines.forEach(line => {
+      probe.textContent = line || ' ';
+      document.body.appendChild(probe);
+      widest = Math.max(widest, probe.getBoundingClientRect().width);
+      document.body.removeChild(probe);
+    });
+
+    const w = Math.round(Math.min(TEXT_MAX_W, Math.max(TEXT_MIN_W, widest + TEXT_PAD * 2 + 2)));
+    t.w = w;
+    el.style.width = w + 'px';
+
+    // Height comes from the laid-out element, which accounts for any
+    // wrapping that happened once the width was clamped to TEXT_MAX_W.
+    el.style.height = 'auto';
+    const h = Math.round(content.getBoundingClientRect().height);
+    t.h = h;
+    el.style.height = h + 'px';
+  }
+
   function addTile(partial) {
     const newTile = {
       id: crypto.randomUUID(),
       board_id: boardId || 'local',
-      x: Math.min(canvasWrap.scrollLeft / scale + 60, (board?.width || 1600) - 160),
-      y: Math.min(canvasWrap.scrollTop / scale + 60, (board?.height || 1600) - 160),
+      x: Math.min(canvasWrap.scrollLeft / scale + 60, (board?.width || DEFAULT_W) - 160),
+      y: Math.min(canvasWrap.scrollTop / scale + 60, (board?.height || DEFAULT_H) - 160),
       w: 160,
       h: 160,
       z: tiles.length + 1,
@@ -1315,11 +1409,13 @@
     const fontSize = parseInt(document.getElementById('textSizeSlider').value) || 32;
     const fontFamily = document.getElementById('fontFamilySelect').value;
     const color = document.getElementById('textColorPicker').value;
+    // Size is measured by fitText once rendered; these are only a
+    // first frame so the tile does not flash at the wrong dimensions.
     addTile({
       type: 'text',
       content: { text, fontSize, fontFamily, color },
-      w: Math.max(120, text.length * 10),
-      h: fontSize * 2 + 20,
+      w: TEXT_MIN_W,
+      h: fontSize + TEXT_PAD * 2,
     });
     closeSheet();
     log('Text tile added');
@@ -1391,8 +1487,8 @@
       });
       localStorage.setItem(`focyl_board_size_${session.id}`, JSON.stringify({ w, h }));
       saveBoard();
-      setStatus('Canvas resized');
-      closeSheet();
+      setStatus(`Board set to ${w}×${h}`);
+      fitToScreen();
       log('Canvas resized to ' + w + 'x' + h);
     }
   };
@@ -1495,6 +1591,99 @@
   // ================================================================
   //  LIBRARY PANELS — every library mounted and wired
   // ================================================================
+  window.applyTemplate = function(tpl) {
+    if (!tpl || !Array.isArray(tpl.tiles)) return;
+
+    if (tpl.canvas && tiles.length === 0) {
+      board.width  = tpl.canvas.width  || board.width;
+      board.height = tpl.canvas.height || board.height;
+      document.getElementById('canvasWidth').value  = board.width;
+      document.getElementById('canvasHeight').value = board.height;
+      canvas.style.width  = board.width  + 'px';
+      canvas.style.height = board.height + 'px';
+      markActivePreset();
+    }
+
+    // Offset so a template applied onto an existing board is visible
+    // rather than buried underneath what is already there.
+    const off = tiles.length ? 40 : 0;
+    const topZ = tiles.reduce((m, t) => Math.max(m, t.z || 1), 0);
+
+    tpl.tiles.forEach((src, i) => {
+      tiles.push({
+        ...src,
+        id: crypto.randomUUID(),
+        x: (src.x || 0) + off,
+        y: (src.y || 0) + off,
+        z: topZ + i + 1,
+        board_id: boardId,
+        library_id: 'templates',
+        asset_id: tpl.id,
+        content: JSON.parse(JSON.stringify(src.content || {}))
+      });
+    });
+
+    renderAll();
+    saveBoard();
+    closeSheet();
+    setStatus(`Applied "${tpl.name}"`);
+    log(`Template ${tpl.id}: ${tpl.tiles.length} tiles added`);
+  };
+
+  // After a resize, zoom so the whole board is visible rather than
+  // leaving the user staring at a corner of a huge canvas.
+  function fitToScreen() {
+    const w = board?.width || DEFAULT_W;
+    const h = board?.height || DEFAULT_H;
+    const availW = canvasWrap.clientWidth  - 32;
+    const availH = canvasWrap.clientHeight - 32;
+    const next = Math.min(availW / w, availH / h, 1);
+    scale = Math.max(0.1, Math.round(next * 100) / 100);
+    canvas.style.transform = `scale(${scale})`;
+    const zl = document.getElementById('zoomLevel');
+    if (zl) zl.textContent = Math.round(scale * 100) + '%';
+  }
+  window.fitToScreen = fitToScreen;
+
+  function initSizePresets() {
+    const host = document.getElementById('sizePresets');
+    if (!host) return;
+    host.innerHTML = '';
+    SIZE_PRESETS.forEach(p => {
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.innerHTML = `<strong>${p.label}</strong><span>${p.w}×${p.h}</span>`;
+      b.title = p.note;
+      b.onclick = () => {
+        document.getElementById('canvasWidth').value  = p.w;
+        document.getElementById('canvasHeight').value = p.h;
+        markActivePreset();
+        resizeCanvas();
+      };
+      host.appendChild(b);
+    });
+    markActivePreset();
+    ['canvasWidth','canvasHeight'].forEach(id =>
+      document.getElementById(id)?.addEventListener('input', markActivePreset));
+  }
+
+  function markActivePreset() {
+    const w = parseInt(document.getElementById('canvasWidth')?.value);
+    const h = parseInt(document.getElementById('canvasHeight')?.value);
+    const host = document.getElementById('sizePresets');
+    if (!host) return;
+    [...host.children].forEach((b, i) => {
+      b.classList.toggle('active', SIZE_PRESETS[i].w === w && SIZE_PRESETS[i].h === h);
+    });
+    const hint = document.getElementById('sizeHint');
+    if (hint && w && h) {
+      const inches = (w / 300).toFixed(1) + '" × ' + (h / 300).toFixed(1) + '"';
+      hint.textContent = (w >= 2400 || h >= 2400)
+        ? `Print ready — ${inches} at 300dpi.`
+        : `Screen size. Prints about ${inches} at 300dpi.`;
+    }
+  }
+
   async function initLibraries() {
     if (!window.FocylPicker) { log('Picker not loaded'); return; }
     const tier = session?.tier === 'film' ? 'film'
@@ -1502,6 +1691,12 @@
     const locked = item => alert(`"${item.name}" is part of a paid tier.`);
     const mount = (sel, lib, onPick) =>
       FocylPicker.mount(sel, lib, { tier, onPick, onLocked: locked });
+
+    // TEMPLATES — a springboard, not a replacement. Tiles are appended
+    // with fresh ids and offset so they never sit exactly on existing work.
+    await mount('#panelTemplates', 'templates', item => {
+      applyTemplate(item);
+    });
 
     // Photo category chips, driven by the images library
     const imgLib = await FocylLibraries.load('images');
@@ -1523,8 +1718,10 @@
       if (sel) sel.value = item.stack;
       if (selectedTile && selectedTile.type === 'text') {
         selectedTile.content.fontFamily = item.stack;
-        const el = document.querySelector(`.tile[data-id="${selectedTile.id}"] .text-content`);
+        const tileEl = document.querySelector(`.tile[data-id="${selectedTile.id}"]`);
+        const el = tileEl && tileEl.querySelector('.text-content');
         if (el) el.style.fontFamily = item.stack;
+        if (tileEl) requestAnimationFrame(() => fitText(selectedTile, tileEl));
         saveBoard();
         setStatus('Font applied');
       } else {
@@ -1649,6 +1846,7 @@
 
   window.addEventListener('DOMContentLoaded', () => {
     initTypeControls();
+    initSizePresets();
     initLibraries();
   });
 
