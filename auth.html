@@ -8,6 +8,8 @@
 
   <!-- Link to manifest (PWA) – optional for now -->
   <link rel="manifest" href="/manifest.json">
+  <script src="/lib/focyl-config.js"></script>
+  <script src="/lib/focyl-brand.js" defer></script>
 
   <!-- Supabase JS -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -230,25 +232,7 @@
 <body>
 
 <div class="card">
-  <!-- Logo (iris) – same as before -->
-  <svg viewBox="0 0 100 100" class="mark" aria-hidden="true">
-    <defs>
-      <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
-        <stop offset="0%" stop-color="#35D8F0"/>
-        <stop offset="55%" stop-color="#8B7CF6"/>
-        <stop offset="100%" stop-color="#EA4FC9"/>
-      </linearGradient>
-    </defs>
-    <g fill="url(#g)">
-      <g transform="rotate(-10 50 50)"><path d="M 66,44 C 80,40 90,46 90,50 C 90,54 80,60 66,56 C 60,53 60,47 66,44 Z"/></g>
-      <g transform="rotate(50 50 50)"><path d="M 66,44 C 80,40 90,46 90,50 C 90,54 80,60 66,56 C 60,53 60,47 66,44 Z"/></g>
-      <g transform="rotate(110 50 50)"><path d="M 66,44 C 80,40 90,46 90,50 C 90,54 80,60 66,56 C 60,53 60,47 66,44 Z"/></g>
-      <g transform="rotate(170 50 50)"><path d="M 66,44 C 80,40 90,46 90,50 C 90,54 80,60 66,56 C 60,53 60,47 66,44 Z"/></g>
-      <g transform="rotate(230 50 50)"><path d="M 66,44 C 80,40 90,46 90,50 C 90,54 80,60 66,56 C 60,53 60,47 66,44 Z"/></g>
-      <g transform="rotate(290 50 50)"><path d="M 66,44 C 80,40 90,46 90,50 C 90,54 80,60 66,56 C 60,53 60,47 66,44 Z"/></g>
-    </g>
-    <circle cx="50" cy="50" r="6" fill="url(#g)"/>
-  </svg>
+  <focyl-mark class="mark" size="64"></focyl-mark>
 
   <!-- AUTH VIEW -->
   <div id="authView">
@@ -271,7 +255,8 @@
     </form>
 
     <!-- BYPASS BUTTON (for development – remove later) -->
-    <button class="btn-bypass" id="bypassBtn">🚀 Bypass (test login)</button>
+    <!-- Dev only. Hidden unless FOCYL_CONFIG.devBypass is true. -->
+    <button class="btn-bypass hidden" id="bypassBtn">🚀 Bypass (test login)</button>
   </div>
 
   <!-- PROFILE VIEW (shown after sign-in) -->
@@ -295,9 +280,8 @@
   // ------------------------------------------------------------
   //  SUPABASE CONFIG – REPLACE WITH YOUR ACTUAL KEY
   // ------------------------------------------------------------
-  const SUPABASE_URL = 'https://ufkgmldvclvkzvznsxbs.supabase.co';
-  const SUPABASE_ANON_KEY = 'YOUR_SUPABASE_ANON_KEY'; // <-- PASTE YOUR KEY HERE
-  const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  // Creds come from lib/focyl-config.js — no more placeholder, no more duplication.
+  const sb = supabase.createClient(FOCYL_CONFIG.supabaseUrl, FOCYL_CONFIG.supabaseAnonKey);
 
   // ------------------------------------------------------------
   //  DOM REFERENCES
@@ -488,7 +472,12 @@
   //  Creates a fake session so you can skip auth entirely.
   //  Remove this button when you're done testing.
   // ------------------------------------------------------------
+  // Only wire the bypass at all when explicitly enabled in config.
+  if (window.FOCYL_CONFIG && FOCYL_CONFIG.devBypass) {
+    els.bypassBtn.classList.remove('hidden');
+  }
   els.bypassBtn.addEventListener('click', () => {
+    if (!(window.FOCYL_CONFIG && FOCYL_CONFIG.devBypass)) return;
     // Create a fake user with a fixed ID (you can change it)
     const fakeUser = {
       id: '00000000-0000-0000-0000-000000000000',
