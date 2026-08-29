@@ -1,0 +1,15 @@
+{
+  "library": "templates",
+  "version": 1,
+  "updated": "2026-08-29",
+  "categories": [
+    "grid",
+    "collage",
+    "timeline",
+    "quadrant",
+    "single-focus",
+    "yearly",
+    "quarterly"
+  ],
+  "items": []
+}
