@@ -12,7 +12,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Sora:wght@400;500;600&family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
   <style>
     /* ============================================================
-       ORIGINAL 3D / RADIANT DESIGN – PRESERVED
+       ORIGINAL LAYOUT – RESTORED
        ============================================================ */
     :root {
       --void: #070914;
@@ -38,7 +38,6 @@
       color: var(--paper);
       font-family: var(--body);
       -webkit-tap-highlight-color: transparent;
-      touch-action: none;
     }
 
     body::before, body::after {
@@ -54,7 +53,7 @@
     body::before { top: -20vmax; left: -15vmax; background: var(--cyan); }
     body::after { bottom: -25vmax; right: -20vmax; background: var(--magenta); }
 
-    /* Topbar – with avatar & name */
+    /* Topbar */
     .topbar {
       position: fixed; top: 0; left: 0; right: 0; z-index: 20;
       display: flex; align-items: center; justify-content: space-between;
@@ -63,10 +62,12 @@
       backdrop-filter: blur(12px);
       border-bottom: 1px solid var(--line);
       gap: 10px;
+      height: 52px;
     }
     .topbar .left {
       display: flex; align-items: center; gap: 10px;
       flex: 1;
+      min-width: 0;
     }
     .topbar .back {
       background: transparent; border: none;
@@ -82,7 +83,8 @@
       text-overflow: ellipsis;
     }
     .topbar .right {
-      display: flex; align-items: center; gap: 10px;
+      display: flex; align-items: center; gap: 8px;
+      flex-shrink: 0;
     }
     .topbar .status {
       font-family: var(--mono); font-size: 0.6rem;
@@ -90,41 +92,38 @@
       white-space: nowrap;
     }
     .topbar .profile {
-      display: flex; align-items: center; gap: 8px;
+      display: flex; align-items: center; gap: 6px;
       cursor: pointer;
     }
     .topbar .avatar {
-      width: 32px; height: 32px; border-radius: 50%;
+      width: 30px; height: 30px; border-radius: 50%;
       background: var(--ink-2);
       border: 1px solid var(--line);
       background-size: cover; background-position: center;
       flex-shrink: 0;
       cursor: pointer;
-      transition: border-color 0.2s;
     }
-    .topbar .avatar:hover {
-      border-color: var(--violet);
-    }
+    .topbar .avatar:hover { border-color: var(--violet); }
     .topbar .display-name {
-      font-size: 0.8rem;
+      font-size: 0.75rem;
       color: var(--paper);
       font-weight: 500;
-      max-width: 100px;
+      max-width: 80px;
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
     }
     .topbar .zoom-controls {
-      display: flex; gap: 4px;
+      display: flex; gap: 3px;
       align-items: center;
     }
     .topbar .zoom-controls button {
       background: var(--ink-2);
       border: 1px solid var(--line);
       color: var(--paper);
-      border-radius: 6px;
-      padding: 2px 8px;
-      font-size: 0.7rem;
+      border-radius: 4px;
+      padding: 1px 6px;
+      font-size: 0.65rem;
       cursor: pointer;
       font-family: inherit;
       line-height: 1.5;
@@ -135,20 +134,21 @@
     }
     .topbar .zoom-level {
       font-family: var(--mono);
-      font-size: 0.65rem;
+      font-size: 0.6rem;
       color: var(--mist);
-      min-width: 36px;
+      min-width: 32px;
       text-align: center;
     }
 
-    /* Canvas wrap – zoom container */
+    /* Canvas wrap – scrollable, fills viewport */
     .canvas-wrap {
-      position: absolute; inset: 0; top: 56px; overflow: auto;
+      position: absolute; inset: 0; top: 52px; overflow: auto;
       -webkit-overflow-scrolling: touch;
-      touch-action: none;
       cursor: grab;
     }
     .canvas-wrap:active { cursor: grabbing; }
+
+    /* Canvas – fixed size, zoom via transform */
     .canvas {
       position: relative;
       transform-origin: 0 0;
@@ -163,7 +163,7 @@
     .canvas::before { top: -200px; left: -200px; background: var(--cyan); }
     .canvas::after { bottom: -200px; right: -200px; background: var(--magenta); }
 
-    /* Tiles – no borders (removed) */
+    /* Tiles – no borders */
     .tile {
       position: absolute;
       border-radius: 16px;
@@ -175,12 +175,13 @@
       background-repeat: no-repeat;
       background-position: center;
       background-color: var(--ink);
-      transition: box-shadow 0.2s, z-index 0.1s;
+      transition: box-shadow 0.2s;
       will-change: transform;
       border: none;
     }
     .tile:active { cursor: grabbing; }
     .tile.dragging { z-index: 50; box-shadow: 0 24px 50px -18px rgba(0,0,0,0.85), 0 0 60px rgba(139,124,246,0.2); }
+
     .tile .tile-content {
       width: 100%; height: 100%;
       border-radius: 16px;
@@ -190,13 +191,11 @@
       justify-content: center;
       position: relative;
     }
-    /* Image tiles – no border */
     .tile.image-tile .tile-content {
       background-size: contain;
       background-repeat: no-repeat;
       background-position: center;
     }
-    /* Text tiles – no background, no border */
     .tile.text-tile {
       background: transparent !important;
       box-shadow: none !important;
@@ -221,7 +220,7 @@
       border-radius: 4px;
     }
 
-    /* Tile controls – on hover */
+    /* Controls */
     .tile .del {
       position: absolute; top: 6px; right: 6px; width: 22px; height: 22px;
       border-radius: 50%; background: rgba(7,9,20,0.6);
@@ -248,7 +247,7 @@
       background: transparent;
       border: none;
       color: var(--paper);
-      font-size: 0.65rem;
+      font-size: 0.6rem;
       cursor: pointer;
       padding: 2px 6px;
       border-radius: 12px;
@@ -263,7 +262,6 @@
       color: #070914;
     }
 
-    /* Audio tile */
     .tile.audio-tile {
       background: var(--ink-2);
       display: flex; flex-direction: column;
@@ -322,15 +320,14 @@
     /* FAB */
     .fab {
       position: fixed; right: 20px; bottom: 26px; z-index: 20;
-      width: 58px; height: 58px; border-radius: 50%;
+      width: 56px; height: 56px; border-radius: 50%;
       background: var(--grad); border: none; cursor: pointer;
       box-shadow: 0 14px 30px -10px rgba(139,124,246,0.6), var(--glow);
       display: flex; align-items: center; justify-content: center;
-      touch-action: manipulation;
     }
     .fab svg { width: 22px; height: 22px; stroke: #070914; stroke-width: 2.4; }
 
-    /* Sheet */
+    /* Sheet (unchanged) */
     .scrim {
       position: fixed; inset: 0; background: rgba(7,9,20,0.6);
       z-index: 30; opacity: 0; pointer-events: none;
@@ -375,9 +372,7 @@
       font-family: var(--body); font-size: 0.95rem; margin-bottom: 12px;
       resize: none;
     }
-    input[type="color"] {
-      padding: 4px; height: 44px; cursor: pointer;
-    }
+    input[type="color"] { padding: 4px; height: 44px; cursor: pointer; }
     select { appearance: none; }
     .btn-primary {
       width: 100%; background: var(--grad); color: #070914; border: none;
@@ -410,21 +405,21 @@
 
     @media (max-width: 600px) {
       .sheet { padding: 16px; }
-      .topbar .display-name { max-width: 60px; font-size: 0.7rem; }
-      .topbar .avatar { width: 28px; height: 28px; }
-      .topbar .zoom-controls button { font-size: 0.6rem; padding: 1px 6px; }
+      .topbar .display-name { max-width: 50px; font-size: 0.65rem; }
+      .topbar .avatar { width: 26px; height: 26px; }
+      .topbar .zoom-controls button { font-size: 0.55rem; padding: 1px 5px; }
+      .topbar .status { display: none; }
     }
 
-    /* Debug (bottom-left) */
     #debug {
       position: fixed; bottom: 80px; left: 20px; z-index: 999;
-      background: rgba(0,0,0,0.8); color: #0f0; padding: 6px 10px;
-      font-family: monospace; font-size: 0.6rem;
-      border-radius: 6px; max-width: 70%;
+      background: rgba(0,0,0,0.8); color: #0f0; padding: 4px 8px;
+      font-family: monospace; font-size: 0.55rem;
+      border-radius: 4px; max-width: 70%;
       pointer-events: none;
       white-space: pre-wrap;
       word-break: break-all;
-      opacity: 0.7;
+      opacity: 0.6;
     }
   </style>
 </head>
@@ -438,10 +433,10 @@
   </div>
   <div class="right">
     <div class="zoom-controls">
-      <button id="zoomOutBtn" onclick="adjustZoom(-0.1)">−</button>
+      <button onclick="adjustZoom(-0.1)">−</button>
       <span class="zoom-level" id="zoomLevel">100%</span>
-      <button id="zoomInBtn" onclick="adjustZoom(0.1)">+</button>
-      <button id="zoomResetBtn" onclick="resetZoom()">⟲</button>
+      <button onclick="adjustZoom(0.1)">+</button>
+      <button onclick="resetZoom()">⟲</button>
     </div>
     <span class="status" id="statusText">Ready</span>
     <div class="profile" id="profileArea">
@@ -464,7 +459,7 @@
   </svg>
 </button>
 
-<!-- SHEET -->
+<!-- SHEET (unchanged) -->
 <div class="scrim" id="scrim" onclick="closeSheet()"></div>
 <div class="sheet" id="sheet">
   <div class="grabber"></div>
@@ -531,7 +526,6 @@
   </div>
 </div>
 
-<!-- DEBUG -->
 <div id="debug">⏳ Loading...</div>
 
 <script>
@@ -539,7 +533,8 @@
   //  CONFIG
   // ================================================================
   const SUPABASE_URL = 'https://ufkgmldvclvkzvznsxbs.supabase.co';
-  const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVma2dtbGR2Y2x2a3p2em5zeGJzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc4NjI1MjksImV4cCI6MjEwMzQzODUyOX0.k37JPrSqcDC1zTfh3GYYo71PpWbSAD_Jr0FmhFMqD5o'; // <-- REPLACE
+  const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVma2dtbGR2Y2x2a3p2em5zeGJzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc4NjI1MjksImV4cCI6MjEwMzQzODUyOX0.k37JPrSqcDC1zTfh3GYYo71PpWbSAD_Jr0FmhFMqD5o
+';
 
   const TILE_CONFIG = {
     unsplashKey: '',
@@ -586,10 +581,9 @@
   let tiles = [];
   let boardId = null;
   let scale = 1;
-  const MIN_SCALE = 0.2;
+  const MIN_SCALE = 0.15;
   const MAX_SCALE = 3;
 
-  // DOM refs
   const canvas = document.getElementById('canvas');
   const canvasWrap = document.getElementById('canvasWrap');
   const statusText = document.getElementById('statusText');
@@ -603,7 +597,7 @@
   }
 
   // ================================================================
-  //  PROFILE (avatar + display name)
+  //  PROFILE
   // ================================================================
   let profileData = { display_name: session.email.split('@')[0], avatar_url: null };
 
@@ -651,7 +645,6 @@
     }
   }
 
-  // Avatar upload
   document.getElementById('avatarDisplay').addEventListener('click', () => {
     document.getElementById('avatarInput').click();
   });
@@ -662,7 +655,6 @@
     reader.onload = (ev) => {
       const img = new Image();
       img.onload = () => {
-        // resize to 200x200 max
         const max = 200;
         let w = img.width, h = img.height;
         if (w > h && w > max) { h = h * max / w; w = max; }
@@ -674,10 +666,9 @@
         const dataUrl = c.toDataURL('image/jpeg', 0.8);
         profileData.avatar_url = dataUrl;
         avatarDisplay.style.backgroundImage = `url('${dataUrl}')`;
-        // Save to Supabase
         if (sb) {
           sb.from('profiles').update({ avatar_url: dataUrl }).eq('id', session.id)
-            .then(() => log('Avatar saved to Supabase'))
+            .then(() => log('Avatar saved'))
             .catch(e => log('Avatar save error: ' + e.message));
         }
       };
@@ -730,20 +721,18 @@
   window.resetZoom = function() {
     scale = 1;
     applyZoom();
-    // Center the canvas
     const w = board?.width || 1600;
     const h = board?.height || 1600;
     canvasWrap.scrollLeft = (w * scale) / 2 - canvasWrap.clientWidth / 2;
     canvasWrap.scrollTop = (h * scale) / 2 - canvasWrap.clientHeight / 2;
   };
 
-  // Mouse wheel zoom
+  // Mouse wheel zoom (Ctrl+scroll)
   canvasWrap.addEventListener('wheel', (e) => {
     if (e.ctrlKey || e.metaKey) {
       e.preventDefault();
       const delta = e.deltaY > 0 ? -0.05 : 0.05;
       const newScale = Math.min(MAX_SCALE, Math.max(MIN_SCALE, scale + delta));
-      // zoom centered on mouse
       const rect = canvasWrap.getBoundingClientRect();
       const mx = e.clientX - rect.left;
       const my = e.clientY - rect.top;
@@ -757,9 +746,7 @@
     }
   }, { passive: false });
 
-  // ================================================================
-  //  PINCH ZOOM (mobile)
-  // ================================================================
+  // Pinch zoom (mobile)
   let lastPinchDist = 0;
   canvasWrap.addEventListener('touchstart', (e) => {
     if (e.touches.length === 2) {
@@ -776,7 +763,6 @@
       const dist = Math.sqrt(dx*dx + dy*dy);
       const delta = (dist - lastPinchDist) / 500;
       const newScale = Math.min(MAX_SCALE, Math.max(MIN_SCALE, scale + delta));
-      // center zoom on midpoint
       const rect = canvasWrap.getBoundingClientRect();
       const mx = (e.touches[0].clientX + e.touches[1].clientX) / 2 - rect.left;
       const my = (e.touches[0].clientY + e.touches[1].clientY) / 2 - rect.top;
@@ -821,7 +807,6 @@
           return;
         }
       }
-      // fallback localStorage
       const localBoard = JSON.parse(localStorage.getItem(`focyl_board_${session.email}`) || 'null');
       if (localBoard) {
         board = { ...localBoard, id: 'local' };
@@ -915,9 +900,7 @@
     canvas.style.height = h + 'px';
     canvas.innerHTML = '';
     tiles.forEach(renderTile);
-    // Set initial zoom
     applyZoom();
-    // Center
     canvasWrap.scrollLeft = (w * scale) / 2 - canvasWrap.clientWidth / 2;
     canvasWrap.scrollTop = (h * scale) / 2 - canvasWrap.clientHeight / 2;
   }
@@ -930,11 +913,9 @@
     el.style.top = t.y + 'px';
     el.style.width = t.w + 'px';
     el.style.height = t.h + 'px';
-    // Rotation
     if (t.rotation) {
       el.style.transform = `rotate(${t.rotation}deg)`;
     }
-    // Outline
     if (t.outline) {
       el.style.outline = '2px solid rgba(255,255,255,0.6)';
       el.style.outlineOffset = '2px';
@@ -959,7 +940,7 @@
       rotHandle.addEventListener('mousedown', (e) => { e.stopPropagation(); startRotate(e, el, t); });
       rotHandle.addEventListener('touchstart', (e) => { e.stopPropagation(); startRotate(e, el, t); });
       el.appendChild(rotHandle);
-      // Actions: outline toggle, reset rotation
+      // Actions
       const actions = document.createElement('div');
       actions.className = 'tile-actions';
       const outlineBtn = document.createElement('button');
@@ -1005,20 +986,17 @@
         saveBoard();
       });
       content.appendChild(textEl);
-      // Resize handle
       const handle = document.createElement('div');
       handle.className = 'resize-handle';
       handle.addEventListener('mousedown', (e) => { e.stopPropagation(); startResize(e, el, t); });
       handle.addEventListener('touchstart', (e) => { e.stopPropagation(); startResize(e, el, t); });
       el.appendChild(handle);
-      // Rotate handle
       const rotHandle = document.createElement('div');
       rotHandle.className = 'rotate-handle';
       rotHandle.textContent = '↻';
       rotHandle.addEventListener('mousedown', (e) => { e.stopPropagation(); startRotate(e, el, t); });
       rotHandle.addEventListener('touchstart', (e) => { e.stopPropagation(); startRotate(e, el, t); });
       el.appendChild(rotHandle);
-      // Actions: reset rotation
       const actions = document.createElement('div');
       actions.className = 'tile-actions';
       const resetRotBtn = document.createElement('button');
@@ -1081,7 +1059,7 @@
       el.appendChild(content);
     }
 
-    // Delete button
+    // Delete
     const del = document.createElement('div');
     del.className = 'del';
     del.textContent = '×';
@@ -1093,7 +1071,7 @@
     });
     el.appendChild(del);
 
-    // Click to bring to front
+    // Click to front
     el.addEventListener('click', (e) => {
       if (e.target.closest('.del') || e.target.closest('.tile-actions') || e.target.closest('.resize-handle') || e.target.closest('.rotate-handle')) return;
       const maxZ = Math.max(0, ...tiles.map(t => t.z || 1));
@@ -1102,7 +1080,6 @@
       saveBoard();
     });
 
-    // Drag
     makeDraggable(el, t);
     canvas.appendChild(el);
   }
@@ -1124,7 +1101,6 @@
       if (!dragging) return;
       let newX = origLeft + e.clientX - startX;
       let newY = origTop + e.clientY - startY;
-      // Clamp to board boundaries
       const bw = board?.width || 1600;
       const bh = board?.height || 1600;
       const tw = tile.w;
@@ -1184,12 +1160,11 @@
   }
 
   // ================================================================
-  //  ROTATE (two‑finger or mouse drag on rotate handle)
+  //  ROTATE
   // ================================================================
   function startRotate(e, el, tile) {
     const isTouch = e.type === 'touchstart';
     if (isTouch && e.touches.length === 2) {
-      // two‑finger rotation
       const t1 = e.touches[0];
       const t2 = e.touches[1];
       const rect = el.getBoundingClientRect();
@@ -1222,7 +1197,6 @@
       return;
     }
 
-    // Mouse rotation (drag on rotate handle)
     if (isTouch) return;
     const rect = el.getBoundingClientRect();
     const cx = rect.left + rect.width / 2;
@@ -1251,11 +1225,13 @@
   //  ADD TILE
   // ================================================================
   function addTile(partial) {
+    const bw = board?.width || 1600;
+    const bh = board?.height || 1600;
     const newTile = {
       id: crypto.randomUUID(),
       board_id: boardId || 'local',
-      x: Math.min(canvasWrap.scrollLeft / scale + 60, (board?.width || 1600) - 160),
-      y: Math.min(canvasWrap.scrollTop / scale + 60, (board?.height || 1600) - 160),
+      x: Math.min(canvasWrap.scrollLeft / scale + 60, bw - 160),
+      y: Math.min(canvasWrap.scrollTop / scale + 60, bh - 160),
       w: 160,
       h: 160,
       z: tiles.length + 1,
@@ -1345,11 +1321,11 @@
       board.height = h;
       canvas.style.width = w + 'px';
       canvas.style.height = h + 'px';
-      // Also clamp all tiles to new boundaries
       tiles.forEach(t => {
         t.x = Math.max(0, Math.min(w - t.w, t.x));
         t.y = Math.max(0, Math.min(h - t.h, t.y));
       });
+      // Re-render to update tile positions
       renderAll();
       saveBoard();
       setStatus('Canvas resized');
@@ -1405,11 +1381,9 @@
   // ================================================================
   log('Script started');
 
-  // Load profile first, then board
   (async function init() {
     await loadProfile();
     await loadBoard();
-    // Restore canvas size from localStorage
     const saved = localStorage.getItem(`focyl_board_size_${session?.id}`);
     if (saved && board) {
       try {
@@ -1420,12 +1394,10 @@
         document.getElementById('canvasHeight').value = h;
       } catch (e) {}
     }
-    // Set initial zoom
     resetZoom();
     log('Initialization complete');
   })();
 
-  // Autosave
   setInterval(saveBoard, 30000);
   window.addEventListener('beforeunload', () => { saveBoard(); });
 </script>
