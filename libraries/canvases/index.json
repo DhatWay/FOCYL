@@ -1,6 +1,6 @@
 {
   "library": "canvases",
-  "version": 1,
+  "version": 3,
   "updated": "2026-08-29",
   "categories": [
     "solid",
@@ -14,26 +14,103 @@
   ],
   "items": [
     {
-      "id": "void",
+      "id": "midnight",
       "name": "Midnight",
-      "category": "solid",
-      "fill": "#070914",
+      "category": "midnight",
       "asset": null,
+      "fill": "#070914",
       "tileable": false,
       "printSafe": false,
       "thumb": null,
       "tier": "free"
     },
     {
-      "id": "paper-white",
+      "id": "gallery-white",
       "name": "Gallery White",
       "category": "solid",
-      "fill": "#EDEFF7",
       "asset": null,
+      "fill": "#EDEFF7",
       "tileable": false,
       "printSafe": true,
       "thumb": null,
       "tier": "free"
+    },
+    {
+      "id": "ink",
+      "name": "Ink",
+      "category": "solid",
+      "asset": null,
+      "fill": "#0d1224",
+      "tileable": false,
+      "printSafe": false,
+      "thumb": null,
+      "tier": "free"
+    },
+    {
+      "id": "linen",
+      "name": "Linen",
+      "category": "linen",
+      "asset": "assets/linen.svg",
+      "fill": "#EDE7DA",
+      "tileable": true,
+      "printSafe": true,
+      "thumb": "assets/linen.svg",
+      "tier": "free"
+    },
+    {
+      "id": "cork",
+      "name": "Cork",
+      "category": "cork",
+      "asset": "assets/cork.svg",
+      "fill": "#C89B62",
+      "tileable": true,
+      "printSafe": true,
+      "thumb": "assets/cork.svg",
+      "tier": "free"
+    },
+    {
+      "id": "concrete",
+      "name": "Concrete",
+      "category": "concrete",
+      "asset": "assets/concrete.svg",
+      "fill": "#9EA3AB",
+      "tileable": true,
+      "printSafe": true,
+      "thumb": "assets/concrete.svg",
+      "tier": "free"
+    },
+    {
+      "id": "velvet",
+      "name": "Velvet",
+      "category": "velvet",
+      "asset": "assets/velvet.svg",
+      "fill": "#1A0C28",
+      "tileable": false,
+      "printSafe": false,
+      "thumb": "assets/velvet.svg",
+      "tier": "plus"
+    },
+    {
+      "id": "grad-dawn",
+      "name": "Dawn",
+      "category": "gradient",
+      "asset": "assets/grad-dawn.svg",
+      "fill": "#8B7CF6",
+      "tileable": false,
+      "printSafe": false,
+      "thumb": "assets/grad-dawn.svg",
+      "tier": "free"
+    },
+    {
+      "id": "grad-ember",
+      "name": "Ember",
+      "category": "gradient",
+      "asset": "assets/grad-ember.svg",
+      "fill": "#C9821A",
+      "tileable": false,
+      "printSafe": true,
+      "thumb": "assets/grad-ember.svg",
+      "tier": "plus"
     }
   ]
 }
