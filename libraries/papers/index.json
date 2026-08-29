@@ -1,6 +1,6 @@
 {
   "library": "papers",
-  "version": 2,
+  "version": 3,
   "updated": "2026-08-29",
   "categories": [
     "lined",
@@ -9,30 +9,43 @@
     "scroll",
     "parchment",
     "ledger",
-    "graph",
     "legal-pad"
   ],
   "items": [
     {
-      "id": "lined-classic",
+      "id": "lined",
       "name": "Ruled",
       "category": "lined",
-      "asset": "assets/lined-classic.svg",
-      "tileable": true,
+      "asset": "assets/lined.svg",
       "lineHeight": 32,
       "inkColor": "#1a1f3d",
-      "thumb": null,
+      "w": 300,
+      "h": 220,
+      "thumb": "assets/lined.svg",
       "tier": "free"
     },
     {
-      "id": "grid-fine",
+      "id": "legal-pad",
+      "name": "Legal Pad",
+      "category": "legal-pad",
+      "asset": "assets/legal-pad.svg",
+      "lineHeight": 32,
+      "inkColor": "#1a1f3d",
+      "w": 300,
+      "h": 240,
+      "thumb": "assets/legal-pad.svg",
+      "tier": "free"
+    },
+    {
+      "id": "grid",
       "name": "Grid",
       "category": "grid",
-      "asset": "assets/grid-fine.svg",
-      "tileable": true,
-      "lineHeight": 28,
+      "asset": "assets/grid.svg",
+      "lineHeight": 26,
       "inkColor": "#1a1f3d",
-      "thumb": null,
+      "w": 300,
+      "h": 220,
+      "thumb": "assets/grid.svg",
       "tier": "free"
     },
     {
@@ -40,11 +53,50 @@
       "name": "Dot Grid",
       "category": "dotted",
       "asset": "assets/dotted.svg",
-      "tileable": true,
-      "lineHeight": 28,
+      "lineHeight": 26,
       "inkColor": "#1a1f3d",
-      "thumb": null,
+      "w": 300,
+      "h": 220,
+      "thumb": "assets/dotted.svg",
       "tier": "free"
+    },
+    {
+      "id": "scroll",
+      "name": "Scroll",
+      "category": "scroll",
+      "asset": "assets/scroll.svg",
+      "lineHeight": 30,
+      "inkColor": "#4a3618",
+      "fontStack": "'Playfair Display', serif",
+      "w": 320,
+      "h": 260,
+      "thumb": "assets/scroll.svg",
+      "tier": "free"
+    },
+    {
+      "id": "parchment",
+      "name": "Parchment",
+      "category": "parchment",
+      "asset": "assets/parchment.svg",
+      "lineHeight": 28,
+      "inkColor": "#4a3618",
+      "fontStack": "'Playfair Display', serif",
+      "w": 300,
+      "h": 230,
+      "thumb": "assets/parchment.svg",
+      "tier": "free"
+    },
+    {
+      "id": "ledger",
+      "name": "Ledger",
+      "category": "ledger",
+      "asset": "assets/ledger.svg",
+      "lineHeight": 26,
+      "inkColor": "#1d3a26",
+      "w": 300,
+      "h": 220,
+      "thumb": "assets/ledger.svg",
+      "tier": "plus"
     }
   ]
 }
