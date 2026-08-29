@@ -1,0 +1,39 @@
+{
+  "library": "canvases",
+  "version": 1,
+  "updated": "2026-08-29",
+  "categories": [
+    "solid",
+    "gradient",
+    "linen",
+    "cork",
+    "concrete",
+    "velvet",
+    "midnight",
+    "seasonal"
+  ],
+  "items": [
+    {
+      "id": "void",
+      "name": "Midnight",
+      "category": "solid",
+      "fill": "#070914",
+      "asset": null,
+      "tileable": false,
+      "printSafe": false,
+      "thumb": null,
+      "tier": "free"
+    },
+    {
+      "id": "paper-white",
+      "name": "Gallery White",
+      "category": "solid",
+      "fill": "#EDEFF7",
+      "asset": null,
+      "tileable": false,
+      "printSafe": true,
+      "thumb": null,
+      "tier": "free"
+    }
+  ]
+}
