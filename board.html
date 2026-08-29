@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2, viewport-fit=cover, user-scalable=no">
   <title>Focyl — Board</title>
   <meta name="theme-color" content="#070914">
   <link rel="manifest" href="/manifest.json">
@@ -41,17 +41,47 @@
     .topbar {
       position: fixed; top: 0; left: 0; right: 0; z-index: 20;
       display: flex; align-items: center; justify-content: space-between;
-      padding: 14px 20px;
+      padding: 10px 16px;
       background: rgba(7,9,20,0.7);
       backdrop-filter: blur(12px);
       border-bottom: 1px solid var(--line);
+      height: 56px;
     }
-    .topbar .back { background: transparent; border: none; color: var(--mist); font-size: 0.85rem; cursor: pointer; font-family: inherit; }
-    .topbar .title { font-family: var(--display); font-weight: 600; font-size: 1rem; background: var(--grad); -webkit-background-clip: text; background-clip: text; color: transparent; }
-    .topbar .status { font-family: var(--mono); font-size: 0.68rem; color: var(--mist); }
+    .topbar .left {
+      display: flex; align-items: center; gap: 10px;
+      flex: 1;
+      min-width: 0;
+    }
+    .topbar .back { background: transparent; border: none; color: var(--mist); font-size: 0.85rem; cursor: pointer; font-family: inherit; padding: 4px 0; }
+    .topbar .title { font-family: var(--display); font-weight: 600; font-size: 1rem; background: var(--grad); -webkit-background-clip: text; background-clip: text; color: transparent; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .topbar .right {
+      display: flex; align-items: center; gap: 8px;
+      flex-shrink: 0;
+    }
+    .topbar .status { font-family: var(--mono); font-size: 0.6rem; color: var(--mist); white-space: nowrap; }
+    .topbar .zoom-controls { display: flex; gap: 3px; align-items: center; }
+    .topbar .zoom-controls button {
+      background: var(--ink-2); border: 1px solid var(--line); color: var(--paper);
+      border-radius: 4px; padding: 1px 6px; font-size: 0.65rem; cursor: pointer;
+      font-family: inherit; line-height: 1.5;
+    }
+    .topbar .zoom-controls button:hover { background: var(--violet); color: #070914; }
+    .topbar .zoom-level { font-family: var(--mono); font-size: 0.6rem; color: var(--mist); min-width: 32px; text-align: center; }
+    .topbar .profile { display: flex; align-items: center; gap: 6px; cursor: pointer; }
+    .topbar .avatar {
+      width: 30px; height: 30px; border-radius: 50%;
+      background: var(--ink-2); border: 1px solid var(--line);
+      background-size: cover; background-position: center;
+      flex-shrink: 0; cursor: pointer;
+    }
+    .topbar .avatar:hover { border-color: var(--violet); }
+    .topbar .display-name {
+      font-size: 0.75rem; color: var(--paper); font-weight: 500;
+      max-width: 80px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
 
     .canvas-wrap {
-      position: absolute; inset: 0; top: 60px; overflow: auto;
+      position: absolute; inset: 0; top: 56px; overflow: auto;
       -webkit-overflow-scrolling: touch;
     }
     .canvas {
@@ -59,6 +89,7 @@
       background-image: radial-gradient(rgba(237,239,247,0.05) 1px, transparent 1px);
       background-size: 28px 28px;
       transition: width 0.3s, height 0.3s;
+      transform-origin: 0 0;
     }
     .canvas::before, .canvas::after {
       content: ""; position: absolute; width: 600px; height: 600px;
@@ -71,12 +102,13 @@
       position: absolute; border-radius: 16px;
       border: 1px solid var(--line);
       box-shadow: 0 14px 30px -16px rgba(0,0,0,0.7), var(--glow);
-      touch-action: none; cursor: grab; overflow: hidden;
+      touch-action: none; cursor: grab; overflow: visible;
       background-size: contain;
       background-repeat: no-repeat;
       background-position: center;
       background-color: var(--ink);
       transition: box-shadow 0.2s;
+      will-change: transform;
     }
     .tile:active { cursor: grabbing; }
     .tile.dragging { z-index: 50; box-shadow: 0 24px 50px -18px rgba(0,0,0,0.85), 0 0 60px rgba(139,124,246,0.2); }
@@ -128,17 +160,56 @@
     .tile.audio-tile .audio-label { font-size: 0.7rem; color: var(--mist); margin-top: 4px; max-width: 90%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
     .resize-handle {
-      position: absolute; bottom: 0; right: 0;
-      width: 20px; height: 20px;
+      position: absolute; bottom: -6px; right: -6px;
+      width: 16px; height: 16px;
       cursor: nwse-resize;
       opacity: 0.4;
       background: radial-gradient(circle, var(--violet), transparent);
       border-radius: 50%;
-      transform: translate(30%, 30%);
-      pointer-events: auto;
       z-index: 5;
+      pointer-events: auto;
     }
     .tile:hover .resize-handle { opacity: 0.8; }
+
+    .rotate-handle {
+      position: absolute; top: -12px; left: 50%; transform: translateX(-50%);
+      width: 24px; height: 24px;
+      cursor: grab;
+      opacity: 0.3;
+      background: radial-gradient(circle, var(--cyan), transparent);
+      border-radius: 50%;
+      z-index: 5;
+      pointer-events: auto;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 10px;
+      color: var(--paper);
+      user-select: none;
+      touch-action: none;
+    }
+    .tile:hover .rotate-handle { opacity: 0.7; }
+
+    .tile .tile-actions {
+      position: absolute; bottom: 8px; left: 50%; transform: translateX(-50%);
+      display: flex; gap: 4px;
+      opacity: 0; transition: opacity 0.2s;
+      z-index: 8;
+      background: rgba(7,9,20,0.6);
+      padding: 3px 6px;
+      border-radius: 16px;
+      backdrop-filter: blur(4px);
+    }
+    .tile:hover .tile-actions, .tile.dragging .tile-actions { opacity: 1; }
+    .tile .tile-actions button {
+      background: transparent; border: none; color: var(--paper);
+      font-size: 0.6rem; cursor: pointer; padding: 2px 5px;
+      border-radius: 10px; font-family: inherit;
+    }
+    .tile .tile-actions button:hover { background: var(--violet); color: #070914; }
+    .tile .tile-actions .outline-btn.active { background: var(--violet); color: #070914; }
+
+    .tile.outlined { outline: 2px solid rgba(255,255,255,0.6); outline-offset: 2px; }
 
     .fab {
       position: fixed; right: 20px; bottom: 26px; z-index: 20;
@@ -193,6 +264,7 @@
       font-family: var(--body); font-size: 0.95rem; margin-bottom: 12px;
       resize: none;
     }
+    input[type="color"] { padding: 4px; height: 44px; cursor: pointer; }
     select { appearance: none; }
     .btn-primary {
       width: 100%; background: var(--grad); color: #070914; border: none;
@@ -234,25 +306,43 @@
     }
     .tile:hover .redesign-btn { opacity: 1; }
 
-    /* DEBUG LOG – shows on screen */
     #debug {
       position: fixed; bottom: 80px; left: 20px; z-index: 999;
-      background: rgba(0,0,0,0.8); color: #0f0; padding: 8px 12px;
-      font-family: monospace; font-size: 0.7rem;
-      border-radius: 8px; max-width: 80%;
+      background: rgba(0,0,0,0.8); color: #0f0; padding: 4px 8px;
+      font-family: monospace; font-size: 0.55rem;
+      border-radius: 4px; max-width: 70%;
       pointer-events: none;
       white-space: pre-wrap;
       word-break: break-all;
+      opacity: 0.6;
     }
+
+    /* Avatar input hidden */
+    #avatarInput { display: none; }
   </style>
 </head>
 <body>
 
 <!-- TOPBAR -->
 <div class="topbar">
-  <button class="back" id="backBtn" onclick="window.location.href='index.html'">← Focyl</button>
-  <span class="title" id="boardTitle">My Board</span>
-  <span class="status" id="statusText">Ready</span>
+  <div class="left">
+    <button class="back" id="backBtn" onclick="window.location.href='index.html'">← Focyl</button>
+    <span class="title" id="boardTitle">My Board</span>
+  </div>
+  <div class="right">
+    <div class="zoom-controls">
+      <button onclick="adjustZoom(-0.1)">−</button>
+      <span class="zoom-level" id="zoomLevel">100%</span>
+      <button onclick="adjustZoom(0.1)">+</button>
+      <button onclick="resetZoom()">⟲</button>
+    </div>
+    <span class="status" id="statusText">Ready</span>
+    <div class="profile" id="profileArea">
+      <div class="avatar" id="avatarDisplay" title="Click to change avatar"></div>
+      <span class="display-name" id="displayNameDisplay">User</span>
+    </div>
+    <input type="file" id="avatarInput" accept="image/*" style="display:none">
+  </div>
 </div>
 
 <!-- CANVAS -->
@@ -260,7 +350,7 @@
   <div class="canvas" id="canvas"></div>
 </div>
 
-<!-- FAB – uses onclick as backup -->
+<!-- FAB -->
 <button class="fab" id="fabBtn" aria-label="Add tile" onclick="openSheet()">
   <svg viewBox="0 0 24 24" fill="none" stroke="#070914" stroke-width="2.4" stroke-linecap="round">
     <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
@@ -307,6 +397,8 @@
       <option value="'Georgia', serif">Georgia</option>
       <option value="'Arial', sans-serif">Arial</option>
     </select>
+    <label>Font color</label>
+    <input type="color" id="textColorPicker" value="#EDEFF7">
     <button class="btn-primary" id="addTextBtn" onclick="addTextTile()">Add Text Tile</button>
   </div>
 
@@ -320,17 +412,19 @@
   <div class="panel" id="panelSettings">
     <label>Canvas Size (pixels)</label>
     <div class="crop-row">
-      <input type="number" id="canvasWidth" value="1600" step="100" min="600">
-      <input type="number" id="canvasHeight" value="1600" step="100" min="600">
+      <input type="number" id="canvasWidth" value="1600" step="100" min="400">
+      <input type="number" id="canvasHeight" value="1600" step="100" min="400">
     </div>
     <button class="btn-primary" id="resizeCanvasBtn" onclick="resizeCanvas()">Resize Board</button>
     <hr style="border-color:var(--line);margin:16px 0;">
-    <label>AI Redesign (image tiles)</label>
-    <p class="hint">Click the ✨ button on any image tile.</p>
+    <label>Display Name</label>
+    <input type="text" id="displayNameInput" placeholder="Your display name" onchange="updateDisplayName()">
+    <button class="btn-ghost" onclick="document.getElementById('avatarInput').click()">Change Avatar</button>
+    <p class="hint">Click your avatar in the top bar to change it.</p>
   </div>
 </div>
 
-<!-- DEBUG LOG -->
+<!-- DEBUG -->
 <div id="debug">⏳ Loading...</div>
 
 <script>
@@ -347,7 +441,7 @@
   //  CONFIG
   // ================================================================
   const SUPABASE_URL = 'https://ufkgmldvclvkzvznsxbs.supabase.co';
-  const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVma2dtbGR2Y2x2a3p2em5zeGJzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc4NjI1MjksImV4cCI6MjEwMzQzODUyOX0.k37JPrSqcDC1zTfh3GYYo71PpWbSAD_Jr0FmhFMqD5o'; // <-- REPLACE
+  const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVma2dtbGR2Y2x2a3p2em5zeGJzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc4NjI1MjksImV4cCI6MjEwMzQzODUyOX0.k37JPrSqcDC1zTfh3GYYo71PpWbSAD_Jr0FmhFMqD5o';
 
   const TILE_CONFIG = {
     unsplashKey: '',
@@ -384,14 +478,91 @@
   let board = null;
   let tiles = [];
   let boardId = null;
+  let scale = 1;
+  const MIN_SCALE = 0.15;
+  const MAX_SCALE = 3;
 
   const canvas = document.getElementById('canvas');
   const canvasWrap = document.getElementById('canvasWrap');
   const statusText = document.getElementById('statusText');
+  const zoomLevel = document.getElementById('zoomLevel');
+  const avatarDisplay = document.getElementById('avatarDisplay');
+  const displayNameDisplay = document.getElementById('displayNameDisplay');
+
   function setStatus(t) { if (statusText) statusText.textContent = t; log('Status: ' + t); }
 
   // ================================================================
-  //  SHEET CONTROLS (called from onclick)
+  //  PROFILE (avatar & display name)
+  // ================================================================
+  let profileData = { display_name: session.email.split('@')[0], avatar_url: null };
+
+  // Load from localStorage
+  const savedProfile = localStorage.getItem(`focyl_profile_${session.email}`);
+  if (savedProfile) {
+    try {
+      const parsed = JSON.parse(savedProfile);
+      profileData.display_name = parsed.display_name || profileData.display_name;
+      profileData.avatar_url = parsed.avatar_url || null;
+    } catch(e) {}
+  }
+  updateProfileUI();
+
+  function updateProfileUI() {
+    displayNameDisplay.textContent = profileData.display_name;
+    document.getElementById('displayNameInput').value = profileData.display_name;
+    if (profileData.avatar_url) {
+      avatarDisplay.style.backgroundImage = `url('${profileData.avatar_url}')`;
+      avatarDisplay.style.backgroundSize = 'cover';
+      avatarDisplay.style.backgroundPosition = 'center';
+    } else {
+      avatarDisplay.style.backgroundImage = '';
+      avatarDisplay.style.backgroundColor = 'var(--ink-2)';
+    }
+  }
+
+  avatarDisplay.addEventListener('click', () => {
+    document.getElementById('avatarInput').click();
+  });
+  document.getElementById('avatarInput').addEventListener('change', function(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      const img = new Image();
+      img.onload = () => {
+        const max = 200;
+        let w = img.width, h = img.height;
+        if (w > h && w > max) { h = h * max / w; w = max; }
+        else if (h > max) { w = w * max / h; h = max; }
+        const c = document.createElement('canvas');
+        c.width = w; c.height = h;
+        const ctx = c.getContext('2d');
+        ctx.drawImage(img, 0, 0, w, h);
+        const dataUrl = c.toDataURL('image/jpeg', 0.8);
+        profileData.avatar_url = dataUrl;
+        avatarDisplay.style.backgroundImage = `url('${dataUrl}')`;
+        avatarDisplay.style.backgroundSize = 'cover';
+        avatarDisplay.style.backgroundPosition = 'center';
+        localStorage.setItem(`focyl_profile_${session.email}`, JSON.stringify(profileData));
+        log('Avatar updated');
+      };
+      img.src = ev.target.result;
+    };
+    reader.readAsDataURL(file);
+    this.value = '';
+  });
+
+  window.updateDisplayName = function() {
+    const name = document.getElementById('displayNameInput').value.trim();
+    if (!name) return;
+    profileData.display_name = name;
+    displayNameDisplay.textContent = name;
+    localStorage.setItem(`focyl_profile_${session.email}`, JSON.stringify(profileData));
+    log('Display name updated');
+  };
+
+  // ================================================================
+  //  SHEET CONTROLS
   // ================================================================
   window.openSheet = function() {
     document.getElementById('sheet').classList.add('open');
@@ -404,9 +575,6 @@
     log('Sheet closed');
   };
 
-  // ================================================================
-  //  TAB SWITCH (called from onclick)
-  // ================================================================
   window.switchTab = function(panelId) {
     const tabs = document.querySelectorAll('.tab');
     const panels = {
@@ -422,6 +590,78 @@
     if (panels[panelId]) panels[panelId].classList.add('active');
     log('Switched to ' + panelId);
   };
+
+  // ================================================================
+  //  ZOOM
+  // ================================================================
+  function applyZoom() {
+    canvas.style.transform = `scale(${scale})`;
+    zoomLevel.textContent = Math.round(scale * 100) + '%';
+  }
+
+  window.adjustZoom = function(delta) {
+    scale = Math.min(MAX_SCALE, Math.max(MIN_SCALE, scale + delta));
+    applyZoom();
+  };
+
+  window.resetZoom = function() {
+    scale = 1;
+    applyZoom();
+    const w = board?.width || 1600;
+    const h = board?.height || 1600;
+    canvasWrap.scrollLeft = (w * scale) / 2 - canvasWrap.clientWidth / 2;
+    canvasWrap.scrollTop = (h * scale) / 2 - canvasWrap.clientHeight / 2;
+  };
+
+  // Mouse wheel zoom (Ctrl+scroll)
+  canvasWrap.addEventListener('wheel', (e) => {
+    if (e.ctrlKey || e.metaKey) {
+      e.preventDefault();
+      const delta = e.deltaY > 0 ? -0.05 : 0.05;
+      const newScale = Math.min(MAX_SCALE, Math.max(MIN_SCALE, scale + delta));
+      const rect = canvasWrap.getBoundingClientRect();
+      const mx = e.clientX - rect.left;
+      const my = e.clientY - rect.top;
+      const scrollLeft = canvasWrap.scrollLeft + mx;
+      const scrollTop = canvasWrap.scrollTop + my;
+      const ratio = newScale / scale;
+      scale = newScale;
+      applyZoom();
+      canvasWrap.scrollLeft = scrollLeft * ratio - mx;
+      canvasWrap.scrollTop = scrollTop * ratio - my;
+    }
+  }, { passive: false });
+
+  // Pinch zoom (mobile)
+  let lastPinchDist = 0;
+  canvasWrap.addEventListener('touchstart', (e) => {
+    if (e.touches.length === 2) {
+      const dx = e.touches[0].clientX - e.touches[1].clientX;
+      const dy = e.touches[0].clientY - e.touches[1].clientY;
+      lastPinchDist = Math.sqrt(dx*dx + dy*dy);
+    }
+  }, { passive: true });
+
+  canvasWrap.addEventListener('touchmove', (e) => {
+    if (e.touches.length === 2) {
+      const dx = e.touches[0].clientX - e.touches[1].clientX;
+      const dy = e.touches[0].clientY - e.touches[1].clientY;
+      const dist = Math.sqrt(dx*dx + dy*dy);
+      const delta = (dist - lastPinchDist) / 500;
+      const newScale = Math.min(MAX_SCALE, Math.max(MIN_SCALE, scale + delta));
+      const rect = canvasWrap.getBoundingClientRect();
+      const mx = (e.touches[0].clientX + e.touches[1].clientX) / 2 - rect.left;
+      const my = (e.touches[0].clientY + e.touches[1].clientY) / 2 - rect.top;
+      const scrollLeft = canvasWrap.scrollLeft + mx;
+      const scrollTop = canvasWrap.scrollTop + my;
+      const ratio = newScale / scale;
+      scale = newScale;
+      applyZoom();
+      canvasWrap.scrollLeft = scrollLeft * ratio - mx;
+      canvasWrap.scrollTop = scrollTop * ratio - my;
+      lastPinchDist = dist;
+    }
+  }, { passive: true });
 
   // ================================================================
   //  LOAD BOARD
@@ -453,7 +693,6 @@
           return;
         }
       }
-      // fallback localStorage
       const localBoard = JSON.parse(localStorage.getItem(`focyl_board_${session.email}`) || 'null');
       if (localBoard) {
         board = { ...localBoard, id: 'local' };
@@ -470,7 +709,6 @@
       log('New board created');
     } catch (err) {
       log('Load error: ' + err.message);
-      // fallback
       const localBoard = JSON.parse(localStorage.getItem(`focyl_board_${session.email}`) || 'null');
       if (localBoard) {
         board = { ...localBoard, id: 'local' };
@@ -508,6 +746,8 @@
             w: t.w,
             h: t.h,
             z: t.z || 1,
+            rotation: t.rotation || 0,
+            outline: t.outline || false,
           }));
           const { error: insertError } = await sb.from('tiles').insert(tilesToInsert);
           if (insertError) throw insertError;
@@ -548,28 +788,67 @@
     canvas.style.height = h + 'px';
     canvas.innerHTML = '';
     tiles.forEach(renderTile);
-    canvasWrap.scrollLeft = w / 2 - canvasWrap.clientWidth / 2;
-    canvasWrap.scrollTop = h / 2 - canvasWrap.clientHeight / 2;
+    // Apply zoom and center
+    applyZoom();
+    canvasWrap.scrollLeft = (w * scale) / 2 - canvasWrap.clientWidth / 2;
+    canvasWrap.scrollTop = (h * scale) / 2 - canvasWrap.clientHeight / 2;
     log('Rendered ' + tiles.length + ' tiles');
   }
 
   function renderTile(t) {
     const el = document.createElement('div');
     el.className = 'tile';
+    if (t.outline) el.classList.add('outlined');
     el.dataset.id = t.id;
     el.style.left = t.x + 'px';
     el.style.top = t.y + 'px';
     el.style.width = t.w + 'px';
     el.style.height = t.h + 'px';
+    if (t.rotation) {
+      el.style.transform = `rotate(${t.rotation}deg)`;
+    }
 
     if (t.type === 'image') {
       el.style.backgroundImage = `url('${t.content.url}')`;
-      // resize handle
+      // Resize handle
       const handle = document.createElement('div');
       handle.className = 'resize-handle';
       handle.addEventListener('mousedown', (e) => { e.stopPropagation(); startResize(e, el, t); });
       handle.addEventListener('touchstart', (e) => { e.stopPropagation(); startResize(e, el, t); });
       el.appendChild(handle);
+      // Rotate handle
+      const rotHandle = document.createElement('div');
+      rotHandle.className = 'rotate-handle';
+      rotHandle.textContent = '↻';
+      rotHandle.addEventListener('mousedown', (e) => { e.stopPropagation(); startRotate(e, el, t); });
+      rotHandle.addEventListener('touchstart', (e) => { e.stopPropagation(); startRotate(e, el, t); });
+      el.appendChild(rotHandle);
+      // Actions: outline toggle, reset rotation
+      const actions = document.createElement('div');
+      actions.className = 'tile-actions';
+      const outlineBtn = document.createElement('button');
+      outlineBtn.textContent = '⊞';
+      outlineBtn.title = 'Toggle outline';
+      outlineBtn.classList.toggle('active', t.outline);
+      outlineBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        t.outline = !t.outline;
+        outlineBtn.classList.toggle('active', t.outline);
+        el.classList.toggle('outlined', t.outline);
+        saveBoard();
+      });
+      actions.appendChild(outlineBtn);
+      const resetRotBtn = document.createElement('button');
+      resetRotBtn.textContent = '⟳';
+      resetRotBtn.title = 'Reset rotation';
+      resetRotBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        t.rotation = 0;
+        el.style.transform = 'rotate(0deg)';
+        saveBoard();
+      });
+      actions.appendChild(resetRotBtn);
+      el.appendChild(actions);
       // AI redesign button
       const aiBtn = document.createElement('button');
       aiBtn.className = 'redesign-btn';
@@ -593,11 +872,33 @@
         saveBoard();
       });
       el.appendChild(content);
+      // Resize handle
       const handle = document.createElement('div');
       handle.className = 'resize-handle';
       handle.addEventListener('mousedown', (e) => { e.stopPropagation(); startResize(e, el, t); });
       handle.addEventListener('touchstart', (e) => { e.stopPropagation(); startResize(e, el, t); });
       el.appendChild(handle);
+      // Rotate handle
+      const rotHandle = document.createElement('div');
+      rotHandle.className = 'rotate-handle';
+      rotHandle.textContent = '↻';
+      rotHandle.addEventListener('mousedown', (e) => { e.stopPropagation(); startRotate(e, el, t); });
+      rotHandle.addEventListener('touchstart', (e) => { e.stopPropagation(); startRotate(e, el, t); });
+      el.appendChild(rotHandle);
+      // Actions: reset rotation
+      const actions = document.createElement('div');
+      actions.className = 'tile-actions';
+      const resetRotBtn = document.createElement('button');
+      resetRotBtn.textContent = '⟳';
+      resetRotBtn.title = 'Reset rotation';
+      resetRotBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        t.rotation = 0;
+        el.style.transform = 'rotate(0deg)';
+        saveBoard();
+      });
+      actions.appendChild(resetRotBtn);
+      el.appendChild(actions);
     } else if (t.type === 'audio') {
       el.classList.add('audio-tile');
       const playBtn = document.createElement('div');
@@ -657,17 +958,26 @@
     });
     el.appendChild(del);
 
-    makeDraggable(el, t.id);
+    // Click to front
+    el.addEventListener('click', (e) => {
+      if (e.target.closest('.del') || e.target.closest('.tile-actions') || e.target.closest('.resize-handle') || e.target.closest('.rotate-handle') || e.target.closest('.redesign-btn')) return;
+      const maxZ = Math.max(0, ...tiles.map(t => t.z || 1));
+      t.z = maxZ + 1;
+      el.style.zIndex = t.z;
+      saveBoard();
+    });
+
+    makeDraggable(el, t);
     canvas.appendChild(el);
   }
 
   // ================================================================
   //  DRAG & RESIZE
   // ================================================================
-  function makeDraggable(el, id) {
+  function makeDraggable(el, tile) {
     let startX, startY, origLeft, origTop, dragging = false;
     el.addEventListener('pointerdown', (e) => {
-      if (e.target.closest('.del') || e.target.closest('.resize-handle') || e.target.closest('.redesign-btn')) return;
+      if (e.target.closest('.del') || e.target.closest('.resize-handle') || e.target.closest('.rotate-handle') || e.target.closest('.tile-actions') || e.target.closest('.redesign-btn')) return;
       dragging = true;
       el.classList.add('dragging');
       el.setPointerCapture(e.pointerId);
@@ -676,16 +986,24 @@
     });
     el.addEventListener('pointermove', (e) => {
       if (!dragging) return;
-      el.style.left = (origLeft + e.clientX - startX) + 'px';
-      el.style.top = (origTop + e.clientY - startY) + 'px';
+      let newX = origLeft + e.clientX - startX;
+      let newY = origTop + e.clientY - startY;
+      const bw = board?.width || 1600;
+      const bh = board?.height || 1600;
+      const tw = tile.w;
+      const th = tile.h;
+      newX = Math.max(0, Math.min(bw - tw, newX));
+      newY = Math.max(0, Math.min(bh - th, newY));
+      el.style.left = newX + 'px';
+      el.style.top = newY + 'px';
+      tile.x = newX;
+      tile.y = newY;
     });
     function endDrag() {
       if (!dragging) return;
       dragging = false;
       el.classList.remove('dragging');
-      const x = parseFloat(el.style.left), y = parseFloat(el.style.top);
-      const tile = tiles.find(t => t.id === id);
-      if (tile) { tile.x = x; tile.y = y; saveBoard(); }
+      saveBoard();
       setStatus('Saved');
     }
     el.addEventListener('pointerup', endDrag);
@@ -726,18 +1044,84 @@
   }
 
   // ================================================================
+  //  ROTATE (two-finger or handle)
+  // ================================================================
+  function startRotate(e, el, tile) {
+    const isTouch = e.type === 'touchstart';
+    if (isTouch && e.touches.length === 2) {
+      // Two-finger rotation
+      const t1 = e.touches[0];
+      const t2 = e.touches[1];
+      const rect = el.getBoundingClientRect();
+      const cx = rect.left + rect.width / 2;
+      const cy = rect.top + rect.height / 2;
+      const angle1 = Math.atan2(t1.clientY - cy, t1.clientX - cx);
+      const angle2 = Math.atan2(t2.clientY - cy, t2.clientX - cx);
+      let initialAngle = angle2 - angle1;
+      let initialRotation = tile.rotation || 0;
+
+      const onMove = (ev) => {
+        if (ev.touches.length !== 2) return;
+        const nt1 = ev.touches[0];
+        const nt2 = ev.touches[1];
+        const nAngle1 = Math.atan2(nt1.clientY - cy, nt1.clientX - cx);
+        const nAngle2 = Math.atan2(nt2.clientY - cy, nt2.clientX - cx);
+        let delta = (nAngle2 - nAngle1) - initialAngle;
+        let newRot = initialRotation + delta * (180 / Math.PI);
+        tile.rotation = newRot;
+        el.style.transform = `rotate(${newRot}deg)`;
+      };
+      const onEnd = () => {
+        document.removeEventListener('touchmove', onMove);
+        document.removeEventListener('touchend', onEnd);
+        saveBoard();
+      };
+      document.addEventListener('touchmove', onMove, { passive: true });
+      document.addEventListener('touchend', onEnd, { passive: true });
+      e.preventDefault();
+      return;
+    }
+
+    if (isTouch) return;
+    // Mouse rotation on handle
+    const rect = el.getBoundingClientRect();
+    const cx = rect.left + rect.width / 2;
+    const cy = rect.top + rect.height / 2;
+    const startAngle = Math.atan2(e.clientY - cy, e.clientX - cx);
+    let initialRotation = tile.rotation || 0;
+
+    const onMove = (ev) => {
+      const angle = Math.atan2(ev.clientY - cy, ev.clientX - cx);
+      let delta = angle - startAngle;
+      let newRot = initialRotation + delta * (180 / Math.PI);
+      tile.rotation = newRot;
+      el.style.transform = `rotate(${newRot}deg)`;
+    };
+    const onEnd = () => {
+      document.removeEventListener('mousemove', onMove);
+      document.removeEventListener('mouseup', onEnd);
+      saveBoard();
+    };
+    document.addEventListener('mousemove', onMove);
+    document.addEventListener('mouseup', onEnd);
+    e.preventDefault();
+  }
+
+  // ================================================================
   //  ADD TILE
   // ================================================================
   function addTile(partial) {
     const newTile = {
       id: crypto.randomUUID(),
       board_id: boardId || 'local',
-      x: canvasWrap.scrollLeft + 60,
-      y: canvasWrap.scrollTop + 60,
+      x: Math.min(canvasWrap.scrollLeft / scale + 60, (board?.width || 1600) - 160),
+      y: Math.min(canvasWrap.scrollTop / scale + 60, (board?.height || 1600) - 160),
       w: 160,
       h: 160,
-      z: 1,
+      z: tiles.length + 1,
       source: 'library',
+      rotation: 0,
+      outline: false,
       ...partial
     };
     tiles.push(newTile);
@@ -748,7 +1132,7 @@
   }
 
   // ================================================================
-  //  BUTTON CALLBACKS (exposed to onclick)
+  //  BUTTON CALLBACKS
   // ================================================================
   window.doSearch = function() {
     const q = document.getElementById('photoQuery').value.trim();
@@ -760,9 +1144,10 @@
     const text = document.getElementById('quoteText').value.trim() || 'Your vision';
     const fontSize = parseInt(document.getElementById('textSizeSlider').value) || 32;
     const fontFamily = document.getElementById('fontFamilySelect').value;
+    const color = document.getElementById('textColorPicker').value;
     addTile({
       type: 'text',
-      content: { text, fontSize, fontFamily, color: '#EDEFF7' },
+      content: { text, fontSize, fontFamily, color },
       w: Math.max(120, text.length * 10),
       h: fontSize * 2 + 20,
     });
@@ -824,7 +1209,18 @@
       board.height = h;
       canvas.style.width = w + 'px';
       canvas.style.height = h + 'px';
+      // Clamp tiles to new boundaries
+      tiles.forEach(t => {
+        t.x = Math.max(0, Math.min(w - t.w, t.x));
+        t.y = Math.max(0, Math.min(h - t.h, t.y));
+        const el = document.querySelector(`.tile[data-id="${t.id}"]`);
+        if (el) {
+          el.style.left = t.x + 'px';
+          el.style.top = t.y + 'px';
+        }
+      });
       localStorage.setItem(`focyl_board_size_${session.id}`, JSON.stringify({ w, h }));
+      saveBoard();
       setStatus('Canvas resized');
       closeSheet();
       log('Canvas resized to ' + w + 'x' + h);
@@ -832,7 +1228,7 @@
   };
 
   // ================================================================
-  //  PHOTO SEARCH (same as before)
+  //  PHOTO SEARCH
   // ================================================================
   async function searchPhotos(query) {
     const hint = document.getElementById('photoHint');
