@@ -7,7 +7,7 @@
    static assets, and deletes old caches on activate.
    Bump CACHE on every deploy.
    ============================================================ */
-const CACHE = 'focyl-v4';
+const CACHE = 'focyl-v1';
 const SHELL = [
   './', './index.html', './auth.html', './board.html',
   './manifest.json',
