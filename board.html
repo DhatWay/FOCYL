@@ -7,20 +7,285 @@
   <meta name="theme-color" content="#070914">
   <link rel="manifest" href="/manifest.json">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <!-- Google Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Sora:wght@400;500;600&family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
   <style>
-    /* ====== THEME (same as before) ====== */
-    :root { /* ... keep the full CSS from previous versions ... */ }
-    /* I'll paste the same CSS but with one change for images */
-    .tile.image-tile {
-      background-size: contain !important; /* ensure full image visible */
+    /* ============================================================
+       ORIGINAL 3D / RADIANT DESIGN – UNTOUCHED
+       ============================================================ */
+    :root {
+      --void: #070914;
+      --ink: #0d1224;
+      --ink-2: #121a34;
+      --line: rgba(237,239,247,0.09);
+      --paper: #EDEFF7;
+      --mist: #9AA4C7;
+      --cyan: #35D8F0;
+      --violet: #8B7CF6;
+      --magenta: #EA4FC9;
+      --grad: linear-gradient(135deg, var(--cyan), var(--violet) 55%, var(--magenta));
+      --glow: 0 0 40px rgba(139,124,246,0.3);
+      --display: 'Space Grotesk', sans-serif;
+      --body: 'Sora', sans-serif;
+      --mono: 'JetBrains Mono', monospace;
+      --radius: 22px;
+    }
+    * { box-sizing: border-box; }
+    html, body { height: 100%; margin: 0; }
+    body {
+      background: var(--void);
+      color: var(--paper);
+      font-family: var(--body);
+      overflow: hidden;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body::before, body::after {
+      content: "";
+      position: fixed;
+      width: 60vmax; height: 60vmax;
+      border-radius: 50%;
+      filter: blur(90px);
+      opacity: 0.14;
+      pointer-events: none;
+      z-index: 0;
+    }
+    body::before { top: -20vmax; left: -15vmax; background: var(--cyan); }
+    body::after { bottom: -25vmax; right: -20vmax; background: var(--magenta); }
+
+    /* Topbar */
+    .topbar {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 20;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 14px 20px;
+      background: rgba(7,9,20,0.7);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--line);
+    }
+    .topbar .back {
+      background: transparent; border: none;
+      color: var(--mist); font-size: 0.85rem; cursor: pointer;
+      font-family: inherit;
+    }
+    .topbar .title {
+      font-family: var(--display); font-weight: 600; font-size: 1rem;
+      background: var(--grad); -webkit-background-clip: text; background-clip: text; color: transparent;
+    }
+    .topbar .status {
+      font-family: var(--mono); font-size: 0.68rem; color: var(--mist);
+    }
+
+    /* Canvas */
+    .canvas-wrap {
+      position: absolute; inset: 0; top: 60px; overflow: auto;
+      -webkit-overflow-scrolling: touch;
+    }
+    .canvas {
+      position: relative;
+      background-image: radial-gradient(rgba(237,239,247,0.05) 1px, transparent 1px);
+      background-size: 28px 28px;
+      transition: width 0.3s, height 0.3s;
+    }
+    .canvas::before, .canvas::after {
+      content: ""; position: absolute; width: 600px; height: 600px;
+      border-radius: 50%; filter: blur(150px); opacity: 0.08; pointer-events: none;
+    }
+    .canvas::before { top: -200px; left: -200px; background: var(--cyan); }
+    .canvas::after { bottom: -200px; right: -200px; background: var(--magenta); }
+
+    /* Tiles – 3D depth */
+    .tile {
+      position: absolute; border-radius: 16px;
+      border: 1px solid var(--line);
+      box-shadow: 0 14px 30px -16px rgba(0,0,0,0.7), var(--glow);
+      touch-action: none; cursor: grab; overflow: hidden;
+      background-size: contain; /* FIX: show full image without cropping */
       background-repeat: no-repeat;
       background-position: center;
+      background-color: var(--ink);
+      transition: box-shadow 0.2s;
     }
-    /* rest of CSS unchanged */
+    .tile:active { cursor: grabbing; }
+    .tile.dragging { z-index: 50; box-shadow: 0 24px 50px -18px rgba(0,0,0,0.85), 0 0 60px rgba(139,124,246,0.2); }
+
+    /* Text tile – pure text, no background */
+    .tile.text-tile {
+      background: transparent !important;
+      border: none !important;
+      box-shadow: none !important;
+      padding: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: grab;
+    }
+    .tile.text-tile .text-content {
+      outline: none;
+      word-break: break-word;
+      text-align: center;
+      line-height: 1.2;
+      width: 100%;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .tile.text-tile .text-content:focus {
+      outline: 2px solid var(--violet);
+    }
+
+    .tile .del {
+      position: absolute; top: 6px; right: 6px; width: 22px; height: 22px;
+      border-radius: 50%; background: rgba(7,9,20,0.6);
+      border: 1px solid var(--line); color: var(--paper);
+      font-family: var(--mono); font-size: 0.8rem;
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer; opacity: 0; transition: opacity 0.2s;
+      z-index: 10;
+    }
+    .tile:hover .del, .tile.dragging .del { opacity: 1; }
+
+    /* Audio tile */
+    .tile.audio-tile {
+      background: var(--ink-2);
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      padding: 12px;
+      cursor: pointer;
+    }
+    .tile.audio-tile .play-btn {
+      font-size: 2rem; margin-bottom: 6px;
+      filter: drop-shadow(0 0 10px rgba(53,216,240,0.3));
+    }
+    .tile.audio-tile .progress-bar {
+      width: 80%; height: 4px; background: var(--line); border-radius: 4px; overflow: hidden;
+    }
+    .tile.audio-tile .progress-bar .fill {
+      height: 100%; width: 0%; background: var(--grad);
+    }
+    .tile.audio-tile .audio-label {
+      font-size: 0.7rem; color: var(--mist); margin-top: 4px;
+      max-width: 90%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+
+    /* Resize handle (for text and image tiles) */
+    .resize-handle {
+      position: absolute; bottom: 0; right: 0;
+      width: 20px; height: 20px;
+      cursor: nwse-resize;
+      opacity: 0.4;
+      background: radial-gradient(circle, var(--violet), transparent);
+      border-radius: 50%;
+      transform: translate(30%, 30%);
+      pointer-events: auto;
+      z-index: 5;
+    }
+    .tile:hover .resize-handle { opacity: 0.8; }
+
+    /* FAB */
+    .fab {
+      position: fixed; right: 20px; bottom: 26px; z-index: 20;
+      width: 58px; height: 58px; border-radius: 50%;
+      background: var(--grad); border: none; cursor: pointer;
+      box-shadow: 0 14px 30px -10px rgba(139,124,246,0.6), var(--glow);
+      display: flex; align-items: center; justify-content: center;
+    }
+    .fab svg { width: 22px; height: 22px; stroke: #070914; stroke-width: 2.4; }
+
+    /* Sheet */
+    .scrim {
+      position: fixed; inset: 0; background: rgba(7,9,20,0.6);
+      z-index: 30; opacity: 0; pointer-events: none;
+      transition: opacity 0.25s ease;
+    }
+    .scrim.open { opacity: 1; pointer-events: auto; }
+    .sheet {
+      position: fixed; left: 0; right: 0; bottom: 0; z-index: 31;
+      background: var(--ink);
+      border: 1px solid var(--line); border-bottom: none;
+      border-radius: 22px 22px 0 0;
+      padding: 20px 20px calc(20px + env(safe-area-inset-bottom));
+      transform: translateY(100%);
+      transition: transform 0.3s cubic-bezier(.2,.8,.2,1);
+      max-height: 75vh; overflow-y: auto;
+    }
+    .sheet.open { transform: translateY(0); }
+    .grabber { width: 36px; height: 4px; background: var(--line); border-radius: 4px; margin: 0 auto 18px; }
+
+    .tabs {
+      display: flex; gap: 6px; margin-bottom: 18px;
+      background: var(--ink-2); border-radius: 100px; padding: 4px;
+    }
+    .tab {
+      flex: 1; text-align: center; padding: 9px 0; border-radius: 100px;
+      font-size: 0.82rem; font-weight: 600; cursor: pointer; color: var(--mist);
+      border: none; background: transparent; font-family: inherit;
+    }
+    .tab.active { background: var(--grad); color: #070914; }
+
+    .panel { display: none; }
+    .panel.active { display: block; }
+
+    label {
+      display: block; font-family: var(--mono); font-size: 0.7rem;
+      text-transform: uppercase; letter-spacing: 0.08em; color: var(--mist);
+      margin: 0 0 6px;
+    }
+    input, textarea, select {
+      width: 100%; background: var(--ink-2); border: 1px solid var(--line);
+      color: var(--paper); border-radius: 12px; padding: 12px 14px;
+      font-family: var(--body); font-size: 0.95rem; margin-bottom: 12px;
+      resize: none;
+    }
+    select { appearance: none; }
+    .btn-primary {
+      width: 100%; background: var(--grad); color: #070914; border: none;
+      border-radius: 100px; padding: 13px 0; font-weight: 600; font-size: 0.95rem;
+      cursor: pointer; margin-bottom: 10px;
+    }
+    .btn-ghost {
+      width: 100%; background: transparent; border: 1px dashed rgba(237,239,247,0.25);
+      color: var(--paper); border-radius: 14px; padding: 13px 0; font-weight: 600;
+      font-size: 0.9rem; cursor: pointer; margin-bottom: 10px;
+    }
+    .hint { font-family: var(--mono); font-size: 0.75rem; color: var(--mist); margin: 0 0 12px; }
+    .results {
+      display: grid; grid-template-columns: repeat(3,1fr); gap: 8px; margin-bottom: 10px;
+    }
+    .results .thumb {
+      aspect-ratio: 1/1; border-radius: 10px; background-size: cover; background-position: center;
+      border: 1px solid var(--line); cursor: pointer; background-color: var(--ink-2);
+    }
+    input[type="file"] { display: none; }
+
+    .font-size-control {
+      display: flex; align-items: center; gap: 10px;
+    }
+    .font-size-control input[type="range"] {
+      flex: 1; margin: 0;
+    }
+    .font-size-control span {
+      font-family: var(--mono); font-size: 0.9rem; min-width: 40px;
+    }
+
+    .crop-row {
+      display: flex; gap: 10px;
+    }
+    .crop-row input { flex: 1; }
+
+    @media (max-width: 600px) {
+      .sheet { padding: 16px; }
+    }
+
+    .tile .redesign-btn {
+      position: absolute; bottom: 8px; left: 50%; transform: translateX(-50%);
+      background: rgba(7,9,20,0.7); border: 1px solid var(--violet); color: white;
+      border-radius: 20px; padding: 4px 12px; font-size: 0.7rem;
+      cursor: pointer; opacity: 0; transition: opacity 0.2s;
+      z-index: 6; font-family: inherit;
+    }
+    .tile:hover .redesign-btn { opacity: 1; }
   </style>
 </head>
 <body>
@@ -55,7 +320,6 @@
     <button class="tab" id="tabSettings">Settings</button>
   </div>
 
-  <!-- Panels (same as before) -->
   <div class="panel active" id="panelPhoto">
     <label for="photoQuery">Search free photos</label>
     <input type="text" id="photoQuery" placeholder="studio, mid thirties…">
@@ -110,7 +374,7 @@
 
 <script>
   // ================================================================
-  //  1. IMMEDIATE UI EVENT LISTENERS (runs before any async)
+  //  1. IMMEDIATE UI EVENT LISTENERS (attached before anything else)
   // ================================================================
   document.addEventListener('DOMContentLoaded', function() {
     console.log('DOM ready – attaching UI listeners');
@@ -164,7 +428,7 @@
     if (fileInput) {
       fileInput.addEventListener('change', function(e) {
         handleFileUpload(e);
-        this.value = ''; // reset
+        this.value = '';
       });
     }
 
@@ -181,13 +445,11 @@
           w: Math.max(120, text.length * 10),
           h: fontSize * 2 + 20,
         });
-        // close sheet
         sheet.classList.remove('open');
         scrim.classList.remove('open');
       });
     }
 
-    // Font size slider display
     const slider = document.getElementById('textSizeSlider');
     const display = document.getElementById('textSizeDisplay');
     if (slider && display) {
@@ -237,18 +499,16 @@
       });
     }
 
-    // Now load the board (async)
+    // Now load board data
     loadBoard();
   });
 
   // ================================================================
   //  2. SUPABASE & BOARD LOGIC (with fallbacks)
   // ================================================================
-  // Config
   const SUPABASE_URL = 'https://ufkgmldvclvkzvznsxbs.supabase.co';
   const SUPABASE_ANON_KEY = 'YOUR_SUPABASE_ANON_KEY'; // <-- REPLACE
 
-  // API keys (optional)
   const TILE_CONFIG = {
     unsplashKey: '',
     pexelsKey: '',
@@ -256,27 +516,20 @@
     hfModel: 'stabilityai/stable-diffusion-2-1',
   };
 
-  // Session
   const session = JSON.parse(localStorage.getItem('focyl_user') || 'null');
   if (!session) {
-    // If no session, redirect to auth (but we do this inside DOMContentLoaded to avoid early redirect)
-    // We'll check inside loadBoard
+    // Will redirect inside loadBoard if needed
   }
 
-  // Supabase client
   let sb = null;
   try {
     sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-  } catch (e) {
-    console.warn('Supabase init failed', e);
-  }
+  } catch (e) { console.warn('Supabase init failed', e); }
 
-  // State
   let board = null;
   let tiles = [];
   let boardId = null;
 
-  // DOM refs (used by functions)
   const canvas = document.getElementById('canvas');
   const canvasWrap = document.getElementById('canvasWrap');
   const statusText = document.getElementById('statusText');
@@ -286,36 +539,27 @@
   //  3. LOAD BOARD
   // ================================================================
   async function loadBoard() {
-    // If no session, redirect
     if (!session) {
       window.location.href = 'auth.html';
       return;
     }
-
     try {
-      // Try Supabase first
       if (sb) {
         const { data: boardData, error: boardError } = await sb
           .from('boards')
           .select('*')
           .eq('user_id', session.id)
           .maybeSingle();
-
-        if (boardError && boardError.code !== 'PGRST116') {
-          throw new Error('Supabase board fetch failed');
-        }
-
+        if (boardError && boardError.code !== 'PGRST116') throw new Error('Supabase board fetch failed');
         if (boardData) {
           board = boardData;
           boardId = board.id;
           document.getElementById('boardTitle').textContent = board.title;
-
           const { data: tileData, error: tileError } = await sb
             .from('tiles')
             .select('*')
             .eq('board_id', boardId)
             .order('z', { ascending: true });
-
           if (tileError) throw tileError;
           tiles = tileData || [];
           renderAll();
@@ -323,7 +567,6 @@
           return;
         }
       }
-
       // Fallback to localStorage
       const localBoard = JSON.parse(localStorage.getItem(`focyl_board_${session.email}`) || 'null');
       if (localBoard) {
@@ -333,16 +576,12 @@
         setStatus('Loaded from localStorage');
         return;
       }
-
-      // New board
       board = { title: 'My Board', width: 1600, height: 1600 };
       tiles = [];
       renderAll();
       setStatus('New board');
-
     } catch (err) {
       console.error('Load error:', err);
-      // Last resort: try localStorage again
       const localBoard = JSON.parse(localStorage.getItem(`focyl_board_${session.email}`) || 'null');
       if (localBoard) {
         board = { ...localBoard, id: 'local' };
@@ -384,7 +623,6 @@
         }
         setStatus('Saved to Supabase');
       } else {
-        // localStorage fallback
         const boardData = {
           title: board.title,
           tiles: tiles,
@@ -396,7 +634,6 @@
       }
     } catch (err) {
       console.error('Save error:', err);
-      // Final fallback: always save to localStorage
       const boardData = {
         title: board.title,
         tiles: tiles,
@@ -418,7 +655,6 @@
     canvas.style.height = h + 'px';
     canvas.innerHTML = '';
     tiles.forEach(renderTile);
-    // Center scroll
     canvasWrap.scrollLeft = w / 2 - canvasWrap.clientWidth / 2;
     canvasWrap.scrollTop = h / 2 - canvasWrap.clientHeight / 2;
   }
@@ -432,15 +668,9 @@
     el.style.width = t.w + 'px';
     el.style.height = t.h + 'px';
 
-    // --- IMAGE ---
     if (t.type === 'image') {
-      el.classList.add('image-tile');
-      // Use a background image with contain to show full image
       el.style.backgroundImage = `url('${t.content.url}')`;
-      el.style.backgroundSize = 'contain';
-      el.style.backgroundRepeat = 'no-repeat';
-      el.style.backgroundPosition = 'center';
-      // AI redesign button
+      // background-size: contain is set globally on .tile, so no cropping
       const aiBtn = document.createElement('button');
       aiBtn.className = 'redesign-btn';
       aiBtn.textContent = '✨ Redesign';
@@ -449,16 +679,12 @@
         redesignImageTile(t.id);
       });
       el.appendChild(aiBtn);
-      // Resize handle
       const handle = document.createElement('div');
       handle.className = 'resize-handle';
       handle.addEventListener('mousedown', (e) => { e.stopPropagation(); startResize(e, el, t); });
       handle.addEventListener('touchstart', (e) => { e.stopPropagation(); startResize(e, el, t); });
       el.appendChild(handle);
-    }
-
-    // --- TEXT ---
-    else if (t.type === 'text') {
+    } else if (t.type === 'text') {
       el.classList.add('text-tile');
       const content = document.createElement('div');
       content.className = 'text-content';
@@ -472,16 +698,12 @@
         saveBoard();
       });
       el.appendChild(content);
-      // Resize handle
       const handle = document.createElement('div');
       handle.className = 'resize-handle';
       handle.addEventListener('mousedown', (e) => { e.stopPropagation(); startResize(e, el, t); });
       handle.addEventListener('touchstart', (e) => { e.stopPropagation(); startResize(e, el, t); });
       el.appendChild(handle);
-    }
-
-    // --- AUDIO ---
-    else if (t.type === 'audio') {
+    } else if (t.type === 'audio') {
       el.classList.add('audio-tile');
       const playBtn = document.createElement('div');
       playBtn.className = 'play-btn';
@@ -528,7 +750,6 @@
       el._audio = audio;
     }
 
-    // --- DELETE ---
     const del = document.createElement('div');
     del.className = 'del';
     del.textContent = '×';
@@ -540,7 +761,6 @@
     });
     el.appendChild(del);
 
-    // --- DRAG ---
     makeDraggable(el, t.id);
     canvas.appendChild(el);
   }
@@ -638,7 +858,6 @@
     const results = document.getElementById('results');
     results.innerHTML = '';
     hint.textContent = 'Searching...';
-
     if (TILE_CONFIG.unsplashKey) {
       try {
         const res = await fetch(`https://api.unsplash.com/search/photos?query=${encodeURIComponent(query)}&per_page=9&client_id=${TILE_CONFIG.unsplashKey}`);
@@ -668,7 +887,6 @@
     div.style.backgroundImage = `url('${thumbUrl}')`;
     div.addEventListener('click', () => {
       addTile({ type: 'image', content: { url: fullUrl }, source: 'api' });
-      // close sheet
       document.getElementById('sheet').classList.remove('open');
       document.getElementById('scrim').classList.remove('open');
     });
@@ -695,7 +913,6 @@
         ctx.drawImage(img, 0, 0, w, h);
         const dataUrl = c.toDataURL('image/jpeg', 0.85);
         addTile({ type: 'image', content: { url: dataUrl }, source: 'upload' });
-        // close sheet
         document.getElementById('sheet').classList.remove('open');
         document.getElementById('scrim').classList.remove('open');
       };
@@ -766,7 +983,7 @@
   setInterval(saveBoard, 30000);
   window.addEventListener('beforeunload', () => { saveBoard(); });
 
-  // Restore canvas size from localStorage (run after load)
+  // Restore canvas size from localStorage after load
   document.addEventListener('DOMContentLoaded', function() {
     const saved = localStorage.getItem(`focyl_board_size_${session?.id}`);
     if (saved && board) {
