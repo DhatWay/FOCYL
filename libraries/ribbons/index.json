@@ -1,0 +1,46 @@
+{
+  "library": "ribbons",
+  "version": 2,
+  "updated": "2026-08-29",
+  "categories": [
+    "banner",
+    "sash",
+    "award",
+    "bookmark",
+    "pennant"
+  ],
+  "items": [
+    {
+      "id": "banner-amber",
+      "name": "Amber Banner",
+      "category": "banner",
+      "asset": "assets/banner-amber.svg",
+      "textBox": {
+        "x": 52,
+        "y": 22,
+        "w": 156,
+        "h": 40,
+        "rotate": 0,
+        "align": "center"
+      },
+      "thumb": null,
+      "tier": "free"
+    },
+    {
+      "id": "pennant-teal",
+      "name": "Teal Pennant",
+      "category": "pennant",
+      "asset": "assets/pennant-teal.svg",
+      "textBox": {
+        "x": 24,
+        "y": 20,
+        "w": 170,
+        "h": 36,
+        "rotate": 0,
+        "align": "center"
+      },
+      "thumb": null,
+      "tier": "free"
+    }
+  ]
+}
