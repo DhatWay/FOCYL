@@ -112,21 +112,28 @@
     .canvas::after { bottom: -200px; right: -200px; background: var(--magenta); }
 
     .tile {
-      position: absolute; border-radius: 16px;
-      border: 1px solid var(--line);
-      box-shadow: 0 14px 30px -16px rgba(0,0,0,0.7), var(--glow);
+      position: absolute;
+      border: none;
+      border-radius: 0;
+      box-shadow: none;
+      background-color: transparent;
       touch-action: none; cursor: grab; overflow: visible;
       background-size: contain;
       background-repeat: no-repeat;
       background-position: center;
-      background-color: var(--ink);
       transition: box-shadow 0.2s;
       will-change: transform;
     }
+    /* Opt-in frame, driven by the outline toggle in the tile menu. */
+    .tile.outlined {
+      border-radius: 14px;
+      box-shadow: 0 0 0 2px var(--violet), 0 14px 30px -16px rgba(0,0,0,.7);
+    }
     .tile:active { cursor: grabbing; }
-    .tile.selected { outline: 2px solid var(--violet); outline-offset: 3px; }
+    .tile.selected { outline: 1px solid var(--violet); outline-offset: 0; }
     .tile.dragging { z-index: 50; box-shadow: 0 24px 50px -18px rgba(0,0,0,0.85), 0 0 60px rgba(139,124,246,0.2); }
 
+    .tile.image-tile { background-color: transparent; }
     .tile.text-tile {
       background: transparent !important;
       border: none !important;
@@ -137,6 +144,7 @@
       justify-content: center;
       cursor: grab;
     }
+    .tile.image-tile { background-color: transparent; }
     .tile.text-tile {
       /* Height follows the text; width is whatever fitText measured. */
       height: auto !important;
@@ -1013,6 +1021,23 @@
     const el = document.createElement('div');
     el.className = 'tile';
     if (t.outline) el.classList.add('outlined');
+    if (t.type === 'image') {
+      el.classList.add('image-tile');
+      const src = t.content?.url || t.content?.src;
+      if (src && !t.content._fitted) {
+        const probe = new Image();
+        probe.onload = () => {
+          const ratio = probe.naturalHeight / probe.naturalWidth;
+          if (ratio && isFinite(ratio)) {
+            t.h = Math.round(t.w * ratio);
+            el.style.height = t.h + 'px';
+            t.content._fitted = true;
+            saveBoard();
+          }
+        };
+        probe.src = src;
+      }
+    }
     el.dataset.id = t.id;
     el.style.left = t.x + 'px';
     el.style.top = t.y + 'px';
