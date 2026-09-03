@@ -1447,7 +1447,207 @@
     await searchPhotos(lib.searchTerms?.[cat] || cat.replace(/-/g, ' '), cat, force);
   };
 
-  async function searchPhotos(query, category, fresh) {
+  // ================================================================
+  //  TYPE CONTROLS — font, size, colour, live preview
+  // ================================================================
+  const SWATCHES = ['#EDEFF7','#070914','#35D8F0','#8B7CF6','#EA4FC9','#F5B942'];
+
+  async function initTypeControls() {
+    const sel     = document.getElementById('fontFamilySelect');
+    const slider  = document.getElementById('textSizeSlider');
+    const sizeOut = document.getElementById('textSizeDisplay');
+    const picker  = document.getElementById('textColorPicker');
+    const hexOut  = document.getElementById('colorHex');
+    const swatch  = document.getElementById('colorSwatches');
+    const preview = document.getElementById('typePreview');
+
+    // Fonts come from the library, so adding one is a manifest edit.
+    if (sel) {
+      const lib = await FocylLibraries.load('fonts');
+      sel.innerHTML = '';
+      (lib.items || []).forEach(f => {
+        const o = document.createElement('option');
+        o.value = f.stack;
+        o.textContent = f.name;
+        o.style.fontFamily = f.stack;
+        sel.appendChild(o);
+      });
+      if (!sel.options.length) {
+        sel.innerHTML = '<option value="\'Space Grotesk\', sans-serif">Space Grotesk</option>';
+      }
+    }
+
+    function paint() {
+      if (!preview) return;
+      preview.style.fontFamily = sel?.value || 'inherit';
+      preview.style.fontSize   = (slider?.value || 32) + 'px';
+      preview.style.color      = picker?.value || '#EDEFF7';
+      if (sizeOut) sizeOut.textContent = (slider?.value || 32) + 'px';
+      if (hexOut)  hexOut.textContent  = (picker?.value || '#EDEFF7').toUpperCase();
+    }
+
+    // Editing while a text tile is selected updates that tile live,
+    // rather than only affecting the next one added.
+    function applyToSelected() {
+      if (!selectedTile || selectedTile.type !== 'text') return;
+      selectedTile.content.fontFamily = sel?.value || selectedTile.content.fontFamily;
+      selectedTile.content.fontSize   = parseInt(slider?.value || selectedTile.content.fontSize);
+      selectedTile.content.color      = picker?.value || selectedTile.content.color;
+      const el = document.querySelector(`.tile[data-id="${selectedTile.id}"]`);
+      const c  = el?.querySelector('.text-content');
+      if (c) {
+        c.style.fontFamily = selectedTile.content.fontFamily;
+        c.style.fontSize   = selectedTile.content.fontSize + 'px';
+        c.style.color      = selectedTile.content.color;
+        requestAnimationFrame(() => fitText(selectedTile, el));
+      }
+      saveBoard();
+    }
+
+    [sel, slider, picker].forEach(el =>
+      el?.addEventListener('input', () => { paint(); applyToSelected(); }));
+
+    if (swatch) {
+      swatch.innerHTML = '';
+      SWATCHES.forEach(hex => {
+        const b = document.createElement('button');
+        b.type = 'button';
+        b.style.cssText =
+          `width:20px;height:20px;border-radius:50%;border:1px solid var(--line);` +
+          `background:${hex};cursor:pointer;padding:0;margin-right:5px;`;
+        b.onclick = () => {
+          if (picker) picker.value = hex;
+          paint();
+          applyToSelected();
+        };
+        swatch.appendChild(b);
+      });
+    }
+
+    paint();
+  }
+
+  // ================================================================
+  //  UPLOAD
+  // ================================================================
+  window.handleFileUpload = async function(e) {
+    const file = e.target.files[0];
+    e.target.value = '';
+    if (!file) return;
+
+    setStatus('Uploading…');
+    try {
+      const m = await FocylMedia.uploadImage(file, boardId, { source: 'upload' });
+      addTile({
+        type: 'image',
+        source: 'upload',
+        content: {
+          url: m.url,
+          path: m.path || null,
+          originalUrl: m.originalUrl || null,
+          originalPath: m.originalPath || null,
+          printSafe: m.printSafe,
+          naturalW: m.naturalW,
+          naturalH: m.naturalH,
+          storage: m.storage
+        },
+        w: 300,
+        h: Math.round(300 * (m.h / m.w))
+      });
+      closeSheet();
+      setStatus(m.storage === 'local' ? 'Added (this device only)' : 'Uploaded');
+      log(`Image ${m.naturalW}x${m.naturalH} → ${m.storage}${m.printSafe ? ' · print safe' : ''}`);
+    } catch (err) {
+      setStatus('Upload failed');
+      log('Upload error: ' + err.message);
+      alert('Upload failed: ' + err.message);
+    }
+  };
+
+  window.handleAudioUpload = function(e) {
+    const file = e.target.files[0];
+    e.target.value = '';
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      addTile({
+        type: 'audio',
+        content: { url: ev.target.result, name: file.name },
+        w: 180, h: 120
+      });
+      closeSheet();
+      setStatus('Audio added');
+    };
+    reader.readAsDataURL(file);
+  };
+
+  window.togglePrintMode = function(on) {
+    printMode = on;
+    const q = document.getElementById('photoQuery')?.value.trim();
+    if (q) searchPhotos(q, activeCategory, true, true);
+    else if (activeCategory) seedPhotoGrid(true);
+  };
+
+  // ================================================================
+  //  TEXT + CANVAS ENTRY POINTS
+  // ================================================================
+  window.addTextTile = function() {
+    const fontFamily = document.getElementById('fontFamilySelect')?.value
+                    || "'Space Grotesk', sans-serif";
+    const fontSize = parseInt(document.getElementById('textSizeSlider')?.value || 32);
+    const color = document.getElementById('textColorPicker')?.value || '#EDEFF7';
+
+    // Size is measured by fitText once rendered; these are a first
+    // frame only, so the tile does not flash at the wrong dimensions.
+    addTile({
+      type: 'text',
+      content: { text: 'Your vision', fontSize, fontFamily, color },
+      w: TEXT_MIN_W,
+      h: fontSize + 20
+    });
+    closeSheet();
+    setStatus('Text tile added');
+  };
+
+  window.resizeCanvas = function() {
+    const w = parseInt(document.getElementById('canvasWidth').value);
+    const h = parseInt(document.getElementById('canvasHeight').value);
+    if (!w || !h || w < 400 || h < 400 || w > 6000 || h > 6000) {
+      setStatus('Size must be between 400 and 6000');
+      return;
+    }
+    board.width = w;
+    board.height = h;
+    canvas.style.width = w + 'px';
+    canvas.style.height = h + 'px';
+    try {
+      localStorage.setItem(`focyl_board_size_${session.id}`, JSON.stringify({ w, h }));
+    } catch (_) {}
+    saveBoard();
+    setStatus(`Board set to ${w}×${h}`);
+    fitToScreen();
+    markActivePreset();
+  };
+
+  // ================================================================
+  //  SEARCH ENTRY POINTS
+  // ================================================================
+  window.doSearch = function() {
+    const q = document.getElementById('photoQuery').value.trim();
+    if (!q) { setStatus('Type something to search'); return; }
+    // A typed query is the user's own words. It must NOT be replaced by
+    // the active category's canned query — the category is passed only
+    // so its quality filters still apply.
+    searchPhotos(q, activeCategory, true, true);
+  };
+
+  window.searchCategory = function(term, category) {
+    document.getElementById('photoQuery').value = '';
+    activeCategory = category;
+    searchPhotos(term, category, true);
+  };
+
+  async function searchPhotos(query, category, fresh, userQuery) {
     seeded = true;                     // an explicit search counts as seeded
     activeCategory = category || activeCategory;
     const grid = document.getElementById('results');
@@ -1456,7 +1656,7 @@
 
     try {
       const { results, rateLimited, pexelsDown, printable, note, inspected, kept } =
-        await FocylImages.search(query, { category, perPage: 12, printMode, fresh });
+        await FocylImages.search(query, { category, perPage: 12, printMode, fresh, userQuery });
 
       const hint = document.getElementById('photoHint');
       if (hint) {
