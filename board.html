@@ -351,6 +351,16 @@
       border: 1px solid var(--line);
     }
     .photo-badge.ok { color: #7BE3B0; border-color: rgba(123,227,176,.5); }
+    .photo-hide {
+      position: absolute; top: 4px; left: 4px; z-index: 3;
+      width: 20px; height: 20px; line-height: 1; padding: 0;
+      border-radius: 50%; border: 1px solid var(--line);
+      background: rgba(7,9,20,.82); color: var(--mist);
+      font-size: .8rem; cursor: pointer; opacity: 0;
+      transition: opacity .15s;
+    }
+    .photo-result:hover .photo-hide,
+    .photo-result:active .photo-hide { opacity: 1; }
     .print-toggle {
       display: flex; align-items: center; gap: 8px; margin: 0 0 10px;
       font-size: .72rem; color: var(--mist); cursor: pointer;
@@ -1434,10 +1444,10 @@
       if (match) match.classList.add('active');
     }
 
-    await searchPhotos(lib.searchTerms?.[cat] || cat.replace(/-/g, ' '), cat);
+    await searchPhotos(lib.searchTerms?.[cat] || cat.replace(/-/g, ' '), cat, force);
   };
 
-  async function searchPhotos(query, category) {
+  async function searchPhotos(query, category, fresh) {
     seeded = true;                     // an explicit search counts as seeded
     activeCategory = category || activeCategory;
     const grid = document.getElementById('results');
@@ -1445,14 +1455,16 @@
     grid.innerHTML = '<p class="hint">Searching…</p>';
 
     try {
-      const { results, rateLimited, pexelsDown, printable, note } =
-        await FocylImages.search(query, { category, perPage: 12, printMode });
+      const { results, rateLimited, pexelsDown, printable, note, inspected, kept } =
+        await FocylImages.search(query, { category, perPage: 12, printMode, fresh });
 
       const hint = document.getElementById('photoHint');
       if (hint) {
-        hint.textContent = note ? note
-          : printable === false ? 'Screen use only — this category cannot be printed on products.'
-          : '';
+        const filtered = inspected ? ` · ${kept} of ${inspected} passed the filter` : '';
+        hint.textContent = note ? note + filtered
+          : printable === false
+            ? 'Screen use only — this category cannot be printed on products.' + filtered
+            : filtered.replace(/^ · /, '');
       }
 
       if (!results.length) {
@@ -1488,6 +1500,20 @@
       badge.className = 'photo-badge' + (safe ? ' ok' : '');
       badge.textContent = safe ? 'Print' : 'Screen';
       d.appendChild(badge);
+
+      // Tap × to hide: the image's distinctive words join this
+      // category's blocklist so the same kind stops appearing.
+      const hideBtn = document.createElement('button');
+      hideBtn.className = 'photo-hide';
+      hideBtn.textContent = '×';
+      hideBtn.title = 'Not this kind — stop showing these';
+      hideBtn.onclick = async (ev) => {
+        ev.stopPropagation();
+        const words = await FocylImages.hide(r, activeCategory);
+        d.remove();
+        setStatus(words.length ? `Hidden: ${words.join(', ')}` : 'Hidden');
+      };
+      d.appendChild(hideBtn);
 
       d.onclick = () => addPhotoTile(r);
       grid.appendChild(d);
