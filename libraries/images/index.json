@@ -1,6 +1,6 @@
 {
   "library": "images",
-  "version": 2,
+  "version": 3,
   "updated": "2026-08-29",
   "categories": [
     "mansions",
@@ -26,7 +26,8 @@
       "thumb": null,
       "credit": "live search",
       "license": "per-provider",
-      "tier": "free"
+      "tier": "free",
+      "primarySource": "pexels"
     },
     {
       "id": "pack-cars",
@@ -37,7 +38,8 @@
       "thumb": null,
       "credit": "live search",
       "license": "per-provider",
-      "tier": "free"
+      "tier": "free",
+      "primarySource": "pexels"
     },
     {
       "id": "pack-beaches",
@@ -48,7 +50,8 @@
       "thumb": null,
       "credit": "live search",
       "license": "per-provider",
-      "tier": "free"
+      "tier": "free",
+      "primarySource": "openverse"
     },
     {
       "id": "pack-yachts",
@@ -59,7 +62,8 @@
       "thumb": null,
       "credit": "live search",
       "license": "per-provider",
-      "tier": "free"
+      "tier": "free",
+      "primarySource": "pexels"
     },
     {
       "id": "pack-jets",
@@ -70,7 +74,8 @@
       "thumb": null,
       "credit": "live search",
       "license": "per-provider",
-      "tier": "free"
+      "tier": "free",
+      "primarySource": "pexels"
     },
     {
       "id": "pack-designer-logos",
@@ -81,7 +86,8 @@
       "thumb": null,
       "credit": "live search",
       "license": "per-provider",
-      "tier": "free"
+      "tier": "free",
+      "primarySource": "pexels"
     },
     {
       "id": "pack-travel",
@@ -92,7 +98,8 @@
       "thumb": null,
       "credit": "live search",
       "license": "per-provider",
-      "tier": "free"
+      "tier": "free",
+      "primarySource": "openverse"
     },
     {
       "id": "pack-fitness",
@@ -103,7 +110,8 @@
       "thumb": null,
       "credit": "live search",
       "license": "per-provider",
-      "tier": "free"
+      "tier": "free",
+      "primarySource": "openverse"
     },
     {
       "id": "pack-family",
@@ -114,7 +122,8 @@
       "thumb": null,
       "credit": "live search",
       "license": "per-provider",
-      "tier": "free"
+      "tier": "free",
+      "primarySource": "openverse"
     },
     {
       "id": "pack-career",
@@ -125,7 +134,8 @@
       "thumb": null,
       "credit": "live search",
       "license": "per-provider",
-      "tier": "free"
+      "tier": "free",
+      "primarySource": "pexels"
     },
     {
       "id": "pack-wealth",
@@ -136,7 +146,8 @@
       "thumb": null,
       "credit": "live search",
       "license": "per-provider",
-      "tier": "free"
+      "tier": "free",
+      "primarySource": "pexels"
     },
     {
       "id": "pack-wellness",
@@ -147,7 +158,8 @@
       "thumb": null,
       "credit": "live search",
       "license": "per-provider",
-      "tier": "free"
+      "tier": "free",
+      "primarySource": "openverse"
     }
   ],
   "note": "Photos are fetched live, not bundled. searchTerms drives the Photo tab chips.",
@@ -164,5 +176,17 @@
     "career": "modern office workspace",
     "wealth": "financial success wealth",
     "wellness": "calm wellness meditation nature"
+  },
+  "sources": {
+    "openverse": {
+      "key": false,
+      "printSafe": "cc0 only",
+      "note": "Called direct from client; per-user rate limits."
+    },
+    "pexels": {
+      "key": true,
+      "printSafe": false,
+      "note": "Via photo-search Edge Function. Screen use only."
+    }
   }
 }
