@@ -13,6 +13,7 @@
   <script src="lib/focyl-picker.js" defer></script>
   <script src="lib/focyl-media.js" defer></script>
   <script src="lib/focyl-images.js" defer></script>
+  <script src="lib/focyl-ai.js" defer></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Sora:wght@400;500;600&family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
@@ -367,6 +368,35 @@
     }
     .print-toggle input { accent-color: var(--violet); width: 15px; height: 15px; }
 
+    #aiPrompt {
+      width: 100%; box-sizing: border-box; resize: vertical;
+      background: var(--ink-2); border: 1px solid var(--line);
+      color: var(--paper); border-radius: 10px; padding: 10px 12px;
+      font-family: inherit; font-size: .85rem; line-height: 1.45;
+    }
+    #aiPrompt:focus { outline: none; border-color: var(--violet); }
+    #aiCategory {
+      width: 100%; background: var(--ink-2); border: 1px solid var(--line);
+      color: var(--paper); border-radius: 10px; padding: 9px 12px;
+      font-family: inherit; font-size: .8rem;
+    }
+    .ai-tile { position: relative; }
+    .ai-tile .prov {
+      position: absolute; bottom: 4px; left: 4px;
+      font-family: var(--mono); font-size: .52rem; padding: 1px 5px;
+      border-radius: 999px; background: rgba(7,9,20,.8); color: var(--mist);
+    }
+    /* Checkerboard so a transparent knockout is visibly transparent. */
+    .ai-tile.alpha {
+      background-color: #2a2f52;
+      background-image:
+        linear-gradient(45deg, #1b2038 25%, transparent 25%),
+        linear-gradient(-45deg, #1b2038 25%, transparent 25%),
+        linear-gradient(45deg, transparent 75%, #1b2038 75%),
+        linear-gradient(-45deg, transparent 75%, #1b2038 75%);
+      background-size: 12px 12px;
+      background-position: 0 0, 0 6px, 6px -6px, -6px 0;
+    }
     .cat-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 12px; }
     .cat-chips button {
       font-family: var(--mono); font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.06em;
@@ -479,7 +509,8 @@
 <div class="sheet" id="sheet">
   <div class="grabber"></div>
   <div class="tabs" id="sheetTabs">
-    <button class="tab active" id="tabTemplates" onclick="switchTab('templates')">Templates</button>
+    <button class="tab active" id="tabCreate" onclick="switchTab('create')">Create</button>
+    <button class="tab" id="tabTemplates" onclick="switchTab('templates')">Templates</button>
     <button class="tab" id="tabPhoto"    onclick="switchTab('photo')">Photo</button>
     <button class="tab" id="tabWords"     onclick="switchTab('words')">Words</button>
     <button class="tab" id="tabFonts"     onclick="switchTab('fonts')">Fonts</button>
@@ -492,7 +523,29 @@
     <button class="tab" id="tabSettings"  onclick="switchTab('settings')">Settings</button>
   </div>
 
-  <div class="panel active" id="panelTemplates">
+  <!-- AI generation. Prompt box + intent + category, then straight
+       to the board or into your own library. -->
+  <div class="panel active" id="panelCreate">
+    <label for="aiPrompt">Describe what you want</label>
+    <textarea id="aiPrompt" rows="3"
+      placeholder="a white Lamborghini outside a modern glass mansion at dusk"></textarea>
+
+    <label style="margin-top:10px">Type</label>
+    <div class="cat-chips" id="aiIntents"></div>
+
+    <label>File under</label>
+    <select id="aiCategory"></select>
+
+    <div class="crop-row" style="margin-top:12px">
+      <button class="btn-primary" id="aiGenerateBtn" onclick="generateImage()">Generate</button>
+      <button class="btn-ghost" onclick="showAiHistory()">My library</button>
+    </div>
+    <p class="hint" id="aiHint"></p>
+
+    <div class="results" id="aiResults"></div>
+  </div>
+
+  <div class="panel" id="panelTemplates">
     <p class="hint">Start from a layout, then make it yours. Applying a template
        adds its tiles to the current board — it does not erase what you have.</p>
   </div>
@@ -769,6 +822,7 @@
     // Fill the photo grid the first time the tab is opened, so it is
     // never an empty box waiting on a search.
     if (panelId === 'photo' && window.FocylImages) seedPhotoGrid();
+    if (panelId === 'create') initAiPanel();
     document.querySelectorAll('#sheetTabs > .tab').forEach(t => t.classList.remove('active'));
     const tab = document.getElementById('tab' + panelId.charAt(0).toUpperCase() + panelId.slice(1));
     if (tab) {
@@ -1528,6 +1582,148 @@
   }
 
   // ================================================================
+  //  AI GENERATION
+  // ================================================================
+  let aiIntent = 'photo';
+  let aiInited = false;
+
+  function initAiPanel() {
+    if (aiInited || !window.FocylAI) return;
+    aiInited = true;
+
+    const chips = document.getElementById('aiIntents');
+    if (chips) {
+      chips.innerHTML = '';
+      Object.entries(FocylAI.INTENTS).forEach(([key, spec], i) => {
+        const b = document.createElement('button');
+        b.className = 'cat-chip' + (i === 0 ? ' active' : '');
+        b.textContent = spec.label;
+        b.onclick = () => {
+          [...chips.children].forEach(x => x.classList.remove('active'));
+          b.classList.add('active');
+          aiIntent = key;
+        };
+        chips.appendChild(b);
+      });
+    }
+
+    // Categories come from the images library so generated work
+    // files alongside everything else.
+    FocylLibraries.load('images').then(lib => {
+      const sel = document.getElementById('aiCategory');
+      if (!sel) return;
+      sel.innerHTML = '<option value="uncategorised">Uncategorised</option>';
+      (lib.categories || []).forEach(c => {
+        const o = document.createElement('option');
+        o.value = c;
+        o.textContent = c.replace(/-/g, ' ');
+        sel.appendChild(o);
+      });
+    });
+
+    FocylAI.countToday().then(n => {
+      const h = document.getElementById('aiHint');
+      if (h && n) h.textContent = `${n} generated today.`;
+    });
+  }
+
+  window.generateImage = async function() {
+    const promptEl = document.getElementById('aiPrompt');
+    const prompt = promptEl?.value.trim();
+    if (!prompt) { setStatus('Describe what you want first'); return; }
+
+    const category = document.getElementById('aiCategory')?.value || 'uncategorised';
+    const btn = document.getElementById('aiGenerateBtn');
+    const grid = document.getElementById('aiResults');
+    const hint = document.getElementById('aiHint');
+
+    btn.disabled = true;
+    btn.textContent = 'Generating…';
+    if (hint) hint.textContent = 'This takes a few seconds.';
+
+    try {
+      const result = await FocylAI.generate(prompt, { intent: aiIntent });
+      const saved = await FocylAI.save(result, { prompt, category, kind: aiIntent });
+
+      if (hint) hint.textContent = `Made with ${result.provider}. Tap to place on the board.`;
+      paintAiResult(saved, grid, true);
+      setStatus('Generated');
+      log(`AI ${aiIntent} via ${result.provider}`);
+    } catch (err) {
+      if (hint) hint.textContent = err.message;
+      setStatus('Generation failed');
+      log('AI error: ' + err.message);
+    } finally {
+      btn.disabled = false;
+      btn.textContent = 'Generate';
+    }
+  };
+
+  function paintAiResult(item, grid, prepend) {
+    if (!grid) return;
+    const d = document.createElement('div');
+    d.className = 'thumb ai-tile' + (item.transparent ? ' alpha' : '');
+    d.style.backgroundImage = `url('${item.url}')`;
+    d.style.backgroundSize = item.transparent ? 'contain' : 'cover';
+    d.title = item.prompt || '';
+    if (item.provider) {
+      const p = document.createElement('span');
+      p.className = 'prov';
+      p.textContent = item.provider;
+      d.appendChild(p);
+    }
+    d.onclick = () => placeGenerated(item);
+    if (prepend && grid.firstChild) grid.insertBefore(d, grid.firstChild);
+    else grid.appendChild(d);
+  }
+
+  // Straight onto the board. Lettering and ribbons keep their
+  // transparency and get no tile chrome.
+  function placeGenerated(item) {
+    const ratio = item.w && item.h ? item.h / item.w : 1;
+    const w = item.transparent ? 280 : 300;
+    addTile({
+      type: 'image',
+      source: 'ai',
+      library_id: 'generated',
+      asset_id: item.id,
+      content: {
+        url: item.url,
+        path: item.path || null,
+        prompt: item.prompt || null,
+        printSafe: item.printSafe,
+        transparent: !!item.transparent,
+        license: 'Generated'
+      },
+      w,
+      h: Math.round(w * ratio)
+    });
+    closeSheet();
+    setStatus('Added to board');
+    if (item.id && sb && !FocylMedia.isLocal()) {
+      sb.rpc('bump_asset_use', { asset: item.id }).then(() => {}, () => {});
+    }
+  }
+
+  window.showAiHistory = async function() {
+    const grid = document.getElementById('aiResults');
+    const hint = document.getElementById('aiHint');
+    if (!grid) return;
+    grid.innerHTML = '';
+    if (hint) hint.textContent = 'Loading your library…';
+
+    const rows = await FocylAI.history({ limit: 40 });
+    if (!rows.length) {
+      if (hint) hint.textContent = FocylMedia.isLocal()
+        ? 'Sign in with an account to keep a library across devices.'
+        : 'Nothing generated yet.';
+      return;
+    }
+    if (hint) hint.textContent = `${rows.length} in your library.`;
+    rows.forEach(r => paintAiResult(r, grid, false));
+  };
+
+  // ================================================================
   //  UPLOAD
   // ================================================================
   window.handleFileUpload = async function(e) {
@@ -1798,7 +1994,14 @@
 
     try {
       let blob;
-      if (hasProxy) {
+      if (window.FocylAI && tile.content.url) {
+        // Pass the existing image in as a reference so the redesign
+        // edits the subject instead of generating something unrelated.
+        const src = await fetch(tile.content.url).then(r => r.blob());
+        const ref = await FocylAI.blobToDataUrl(src);
+        const out = await FocylAI.generate(theme, { intent: 'photo', refImage: ref });
+        blob = out.blob;
+      } else if (hasProxy) {
         const base = FOCYL_CONFIG.supabaseUrl.replace(/\/$/, '');
         const res = await fetch(`${base}${fn}`, {
           method: 'POST',
@@ -2166,6 +2369,7 @@
     if (window.FocylMedia) {
       FocylMedia.init({ sb, userId: session?.id, bucket: FOCYL_CONFIG?.storage?.bucket });
     }
+    if (window.FocylAI) FocylAI.init({ sb, userId: session?.id });
     initSizePresets();
     initLibraries();
   });
