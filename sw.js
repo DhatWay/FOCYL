@@ -8,12 +8,13 @@
 
    Bump CACHE on every deploy.
    ============================================================ */
-const CACHE = 'focyl-v1';
+const CACHE = 'focyl-v8';
 
 const SHELL = [
   './', './index.html', './auth.html', './board.html', './manifest.json',
   './lib/focyl-config.js', './lib/focyl-brand.js',
   './lib/focyl-libraries.js', './lib/focyl-picker.js',
+  './lib/focyl-media.js', './lib/focyl-images.js',
   './assets/focyl-mark.svg', './assets/icon-192.png', './assets/icon-512.png'
 ];
 
