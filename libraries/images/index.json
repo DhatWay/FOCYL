@@ -1,14 +1,14 @@
 {
   "library": "images",
-  "version": 3,
+  "version": 4,
   "updated": "2026-08-29",
   "categories": [
     "mansions",
     "cars",
-    "beaches",
     "yachts",
     "jets",
     "designer-logos",
+    "beaches",
     "travel",
     "fitness",
     "family",
@@ -21,161 +21,161 @@
       "id": "pack-mansions",
       "name": "Mansions",
       "category": "mansions",
-      "query": "luxury mansion architecture exterior",
+      "query": "luxury mansion modern estate exterior",
       "kind": "search",
+      "primarySource": "pexels",
+      "printable": true,
       "thumb": null,
-      "credit": "live search",
       "license": "per-provider",
-      "tier": "free",
-      "primarySource": "pexels"
+      "tier": "free"
     },
     {
       "id": "pack-cars",
       "name": "Cars",
       "category": "cars",
-      "query": "luxury sports car",
+      "query": "luxury supercar exotic sports car",
       "kind": "search",
+      "primarySource": "pexels",
+      "printable": true,
       "thumb": null,
-      "credit": "live search",
       "license": "per-provider",
-      "tier": "free",
-      "primarySource": "pexels"
-    },
-    {
-      "id": "pack-beaches",
-      "name": "Beaches",
-      "category": "beaches",
-      "query": "tropical beach turquoise water",
-      "kind": "search",
-      "thumb": null,
-      "credit": "live search",
-      "license": "per-provider",
-      "tier": "free",
-      "primarySource": "openverse"
+      "tier": "free"
     },
     {
       "id": "pack-yachts",
       "name": "Yachts",
       "category": "yachts",
-      "query": "luxury yacht ocean",
+      "query": "luxury superyacht mega yacht ocean",
       "kind": "search",
+      "primarySource": "pexels",
+      "printable": true,
       "thumb": null,
-      "credit": "live search",
       "license": "per-provider",
-      "tier": "free",
-      "primarySource": "pexels"
+      "tier": "free"
     },
     {
       "id": "pack-jets",
       "name": "Jets",
       "category": "jets",
-      "query": "private jet interior runway",
+      "query": "private jet luxury interior cabin",
       "kind": "search",
+      "primarySource": "pexels",
+      "printable": true,
       "thumb": null,
-      "credit": "live search",
       "license": "per-provider",
-      "tier": "free",
-      "primarySource": "pexels"
+      "tier": "free"
     },
     {
       "id": "pack-designer-logos",
       "name": "Designer Logos",
       "category": "designer-logos",
-      "query": "luxury fashion boutique detail",
+      "query": "luxury fashion boutique storefront detail",
       "kind": "search",
+      "primarySource": "pexels",
+      "printable": false,
       "thumb": null,
-      "credit": "live search",
       "license": "per-provider",
-      "tier": "free",
-      "primarySource": "pexels"
+      "tier": "free"
+    },
+    {
+      "id": "pack-beaches",
+      "name": "Beaches",
+      "category": "beaches",
+      "query": "tropical beach turquoise water paradise",
+      "kind": "search",
+      "primarySource": "pexels",
+      "printable": true,
+      "thumb": null,
+      "license": "per-provider",
+      "tier": "free"
     },
     {
       "id": "pack-travel",
       "name": "Travel",
       "category": "travel",
-      "query": "travel destination landscape",
+      "query": "luxury travel destination scenic",
       "kind": "search",
+      "primarySource": "pexels",
+      "printable": true,
       "thumb": null,
-      "credit": "live search",
       "license": "per-provider",
-      "tier": "free",
-      "primarySource": "openverse"
+      "tier": "free"
     },
     {
       "id": "pack-fitness",
       "name": "Fitness",
       "category": "fitness",
-      "query": "athlete training gym",
+      "query": "athletic physique training gym strong",
       "kind": "search",
+      "primarySource": "pexels",
+      "printable": true,
       "thumb": null,
-      "credit": "live search",
       "license": "per-provider",
-      "tier": "free",
-      "primarySource": "openverse"
+      "tier": "free"
     },
     {
       "id": "pack-family",
       "name": "Family",
       "category": "family",
-      "query": "happy family home candid",
+      "query": "happy family home warm candid",
       "kind": "search",
+      "primarySource": "pexels",
+      "printable": true,
       "thumb": null,
-      "credit": "live search",
       "license": "per-provider",
-      "tier": "free",
-      "primarySource": "openverse"
+      "tier": "free"
     },
     {
       "id": "pack-career",
       "name": "Career",
       "category": "career",
-      "query": "modern office workspace",
+      "query": "modern executive office success professional",
       "kind": "search",
+      "primarySource": "pexels",
+      "printable": true,
       "thumb": null,
-      "credit": "live search",
       "license": "per-provider",
-      "tier": "free",
-      "primarySource": "pexels"
+      "tier": "free"
     },
     {
       "id": "pack-wealth",
       "name": "Wealth",
       "category": "wealth",
-      "query": "financial success wealth",
+      "query": "luxury lifestyle wealth affluent elegant",
       "kind": "search",
+      "primarySource": "pexels",
+      "printable": true,
       "thumb": null,
-      "credit": "live search",
       "license": "per-provider",
-      "tier": "free",
-      "primarySource": "pexels"
+      "tier": "free"
     },
     {
       "id": "pack-wellness",
       "name": "Wellness",
       "category": "wellness",
-      "query": "calm wellness meditation nature",
+      "query": "serene spa wellness calm nature",
       "kind": "search",
+      "primarySource": "pexels",
+      "printable": true,
       "thumb": null,
-      "credit": "live search",
       "license": "per-provider",
-      "tier": "free",
-      "primarySource": "openverse"
+      "tier": "free"
     }
   ],
   "note": "Photos are fetched live, not bundled. searchTerms drives the Photo tab chips.",
   "searchTerms": {
-    "mansions": "luxury mansion architecture exterior",
-    "cars": "luxury sports car",
-    "beaches": "tropical beach turquoise water",
-    "yachts": "luxury yacht ocean",
-    "jets": "private jet interior runway",
-    "designer-logos": "luxury fashion boutique detail",
-    "travel": "travel destination landscape",
-    "fitness": "athlete training gym",
-    "family": "happy family home candid",
-    "career": "modern office workspace",
-    "wealth": "financial success wealth",
-    "wellness": "calm wellness meditation nature"
+    "mansions": "luxury mansion modern estate exterior",
+    "cars": "luxury supercar exotic sports car",
+    "yachts": "luxury superyacht mega yacht ocean",
+    "jets": "private jet luxury interior cabin",
+    "designer-logos": "luxury fashion boutique storefront detail",
+    "beaches": "tropical beach turquoise water paradise",
+    "travel": "luxury travel destination scenic",
+    "fitness": "athletic physique training gym strong",
+    "family": "happy family home warm candid",
+    "career": "modern executive office success professional",
+    "wealth": "luxury lifestyle wealth affluent elegant",
+    "wellness": "serene spa wellness calm nature"
   },
   "sources": {
     "openverse": {
@@ -187,6 +187,487 @@
       "key": true,
       "printSafe": false,
       "note": "Via photo-search Edge Function. Screen use only."
+    }
+  },
+  "recipes": {
+    "mansions": {
+      "query": "luxury mansion modern estate exterior",
+      "alt": [
+        "modern luxury villa exterior",
+        "mansion driveway architecture"
+      ],
+      "must": [
+        "mansion",
+        "villa",
+        "estate",
+        "luxury",
+        "house",
+        "home",
+        "architecture",
+        "residence"
+      ],
+      "exclude": [
+        "ruin",
+        "ruins",
+        "abandoned",
+        "derelict",
+        "decay",
+        "museum",
+        "castle",
+        "church",
+        "cathedral",
+        "barn",
+        "farm",
+        "shed",
+        "cottage",
+        "trailer",
+        "construction",
+        "historic",
+        "19th",
+        "18th",
+        "painting",
+        "engraving",
+        "map",
+        "plan",
+        "drawing"
+      ],
+      "sources": [
+        "pexels"
+      ],
+      "minWidth": 1600,
+      "printable": true
+    },
+    "cars": {
+      "query": "luxury supercar exotic sports car",
+      "alt": [
+        "modern supercar studio",
+        "exotic sports car detail"
+      ],
+      "must": [
+        "car",
+        "supercar",
+        "sports",
+        "coupe",
+        "convertible",
+        "lamborghini",
+        "ferrari",
+        "porsche",
+        "mclaren",
+        "bugatti",
+        "bentley",
+        "rolls",
+        "aston",
+        "maserati"
+      ],
+      "exclude": [
+        "vintage",
+        "classic",
+        "antique",
+        "retro",
+        "rust",
+        "rusty",
+        "wreck",
+        "junk",
+        "scrap",
+        "taxi",
+        "bus",
+        "truck",
+        "van",
+        "tractor",
+        "museum",
+        "model",
+        "toy",
+        "diecast",
+        "race track",
+        "rally",
+        "nascar",
+        "1950",
+        "1960",
+        "1970",
+        "1980",
+        "1990",
+        "2000",
+        "police",
+        "ambulance",
+        "parking lot",
+        "traffic"
+      ],
+      "sources": [
+        "pexels"
+      ],
+      "minWidth": 1600,
+      "printable": true
+    },
+    "yachts": {
+      "query": "luxury superyacht mega yacht ocean",
+      "alt": [
+        "superyacht deck luxury",
+        "motor yacht open sea"
+      ],
+      "must": [
+        "yacht",
+        "superyacht",
+        "megayacht",
+        "luxury",
+        "sailing yacht",
+        "motor yacht"
+      ],
+      "exclude": [
+        "tugboat",
+        "tug",
+        "ferry",
+        "fishing",
+        "trawler",
+        "cargo",
+        "tanker",
+        "container",
+        "naval",
+        "navy",
+        "warship",
+        "military",
+        "wreck",
+        "sunken",
+        "museum",
+        "model",
+        "replica",
+        "barge",
+        "canoe",
+        "kayak",
+        "rowing",
+        "dinghy",
+        "raft",
+        "houseboat",
+        "pirate",
+        "historic",
+        "schooner",
+        "19th",
+        "18th",
+        "painting"
+      ],
+      "sources": [
+        "pexels"
+      ],
+      "minWidth": 1600,
+      "printable": true
+    },
+    "jets": {
+      "query": "private jet luxury interior cabin",
+      "alt": [
+        "private jet runway luxury",
+        "business jet exterior"
+      ],
+      "must": [
+        "jet",
+        "private jet",
+        "business jet",
+        "aircraft",
+        "cabin",
+        "aviation",
+        "gulfstream",
+        "learjet"
+      ],
+      "exclude": [
+        "military",
+        "fighter",
+        "bomber",
+        "war",
+        "combat",
+        "air force",
+        "navy",
+        "crash",
+        "wreck",
+        "museum",
+        "model",
+        "toy",
+        "cargo",
+        "freight",
+        "helicopter",
+        "propeller",
+        "vintage",
+        "wwii",
+        "ww2",
+        "airline",
+        "economy",
+        "airport terminal",
+        "baggage"
+      ],
+      "sources": [
+        "pexels"
+      ],
+      "minWidth": 1600,
+      "printable": true
+    },
+    "designer-logos": {
+      "query": "luxury fashion boutique storefront detail",
+      "alt": [
+        "designer handbag luxury detail",
+        "luxury fashion retail interior"
+      ],
+      "must": [
+        "luxury",
+        "fashion",
+        "boutique",
+        "designer",
+        "handbag",
+        "couture",
+        "retail",
+        "store"
+      ],
+      "exclude": [
+        "thrift",
+        "discount",
+        "outlet",
+        "fake",
+        "replica",
+        "counterfeit",
+        "market stall",
+        "flea"
+      ],
+      "sources": [
+        "pexels"
+      ],
+      "minWidth": 1400,
+      "printable": false,
+      "note": "Trademarks cannot be printed on goods for sale. Screen use only."
+    },
+    "beaches": {
+      "query": "tropical beach turquoise water paradise",
+      "alt": [
+        "white sand beach aerial",
+        "maldives overwater villa"
+      ],
+      "must": [
+        "beach",
+        "sea",
+        "ocean",
+        "coast",
+        "shore",
+        "tropical",
+        "island",
+        "lagoon",
+        "sand"
+      ],
+      "exclude": [
+        "pollution",
+        "litter",
+        "garbage",
+        "plastic",
+        "oil spill",
+        "storm",
+        "flood",
+        "crowd",
+        "crowded",
+        "erosion",
+        "construction",
+        "industrial",
+        "port",
+        "harbour"
+      ],
+      "sources": [
+        "pexels",
+        "openverse"
+      ],
+      "minWidth": 1600,
+      "printable": true
+    },
+    "travel": {
+      "query": "luxury travel destination scenic",
+      "alt": [
+        "luxury resort infinity pool",
+        "scenic mountain landscape"
+      ],
+      "must": [
+        "travel",
+        "destination",
+        "landscape",
+        "resort",
+        "scenic",
+        "view",
+        "mountain",
+        "city"
+      ],
+      "exclude": [
+        "map",
+        "diagram",
+        "sign",
+        "brochure",
+        "timetable",
+        "airport queue",
+        "crowd",
+        "protest"
+      ],
+      "sources": [
+        "pexels",
+        "openverse"
+      ],
+      "minWidth": 1600,
+      "printable": true
+    },
+    "fitness": {
+      "query": "athletic physique training gym strong",
+      "alt": [
+        "athlete workout gym",
+        "fitness training strength"
+      ],
+      "must": [
+        "fitness",
+        "gym",
+        "training",
+        "athlete",
+        "workout",
+        "exercise",
+        "strength",
+        "running"
+      ],
+      "exclude": [
+        "injury",
+        "hospital",
+        "surgery",
+        "diagram",
+        "anatomy",
+        "chart",
+        "medical",
+        "obese"
+      ],
+      "sources": [
+        "pexels"
+      ],
+      "minWidth": 1400,
+      "printable": true
+    },
+    "family": {
+      "query": "happy family home warm candid",
+      "alt": [
+        "family together outdoors happy",
+        "parents children home"
+      ],
+      "must": [
+        "family",
+        "together",
+        "children",
+        "parents",
+        "home",
+        "couple",
+        "happy"
+      ],
+      "exclude": [
+        "funeral",
+        "hospital",
+        "argument",
+        "crying",
+        "poverty",
+        "refugee",
+        "war",
+        "historic",
+        "19th"
+      ],
+      "sources": [
+        "pexels"
+      ],
+      "minWidth": 1400,
+      "printable": true
+    },
+    "career": {
+      "query": "modern executive office success professional",
+      "alt": [
+        "luxury office interior modern",
+        "business professional confident"
+      ],
+      "must": [
+        "office",
+        "business",
+        "professional",
+        "executive",
+        "workspace",
+        "meeting",
+        "desk",
+        "corporate"
+      ],
+      "exclude": [
+        "cubicle",
+        "clutter",
+        "abandoned",
+        "factory",
+        "warehouse",
+        "1980",
+        "vintage",
+        "clip art",
+        "diagram"
+      ],
+      "sources": [
+        "pexels"
+      ],
+      "minWidth": 1400,
+      "printable": true
+    },
+    "wealth": {
+      "query": "luxury lifestyle wealth affluent elegant",
+      "alt": [
+        "luxury penthouse interior",
+        "champagne luxury lifestyle"
+      ],
+      "must": [
+        "luxury",
+        "wealth",
+        "affluent",
+        "elegant",
+        "gold",
+        "penthouse",
+        "designer",
+        "premium"
+      ],
+      "exclude": [
+        "poverty",
+        "debt",
+        "bankruptcy",
+        "chart",
+        "graph",
+        "coin",
+        "banknote",
+        "cryptocurrency",
+        "stock chart",
+        "diagram",
+        "clip art",
+        "monopoly"
+      ],
+      "sources": [
+        "pexels"
+      ],
+      "minWidth": 1400,
+      "printable": true
+    },
+    "wellness": {
+      "query": "serene spa wellness calm nature",
+      "alt": [
+        "meditation peaceful nature",
+        "luxury spa interior calm"
+      ],
+      "must": [
+        "wellness",
+        "spa",
+        "calm",
+        "serene",
+        "meditation",
+        "yoga",
+        "nature",
+        "peaceful",
+        "zen"
+      ],
+      "exclude": [
+        "hospital",
+        "clinic",
+        "medical",
+        "surgery",
+        "pill",
+        "diagram",
+        "anatomy"
+      ],
+      "sources": [
+        "pexels",
+        "openverse"
+      ],
+      "minWidth": 1400,
+      "printable": true
     }
   }
 }
