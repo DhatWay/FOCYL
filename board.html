@@ -831,10 +831,18 @@
     } catch (e) {}
   }
 
+  const BYPASS_ID = '00000000-0000-0000-0000-000000000000';
+  const isLocalOnly = !session?.id || session.id === BYPASS_ID;
+
   async function loadBoard() {
     log('Loading board...');
+    if (isLocalOnly) {
+      boardId = 'local';
+      setStatus('Local mode');
+      log('Local session — Supabase skipped');
+    }
     try {
-      if (sb) {
+      if (sb && !isLocalOnly) {
         const { data: boardData, error: boardError } = await sb
           .from('boards')
           .select('*')
@@ -935,7 +943,7 @@
     saveInFlight = true;
 
     try {
-      if (sb && boardId && boardId !== 'local') {
+      if (sb && !isLocalOnly && boardId && boardId !== 'local') {
         await sb.from('boards')
           .update({ title: board.title, width: board.width, height: board.height, updated_at: new Date().toISOString() })
           .eq('id', boardId);
@@ -973,7 +981,7 @@
         setStatus('Saved');
         log('Saved ' + tiles.length + ' tiles to Supabase');
       } else {
-        setStatus(saveLocal() ? 'Saved locally' : 'Save failed');
+        setStatus(saveLocal() ? (isLocalOnly ? 'Saved on this device' : 'Saved locally') : 'Save failed');
       }
     } catch (err) {
       log('Save error: ' + err.message);
@@ -1846,6 +1854,17 @@
 
   window.addEventListener('DOMContentLoaded', () => {
     initTypeControls();
+    if (isLocalOnly) {
+      const b = document.createElement('div');
+      b.style.cssText =
+        'position:fixed;left:50%;transform:translateX(-50%);bottom:14px;z-index:60;' +
+        'background:rgba(245,185,66,.14);border:1px solid rgba(245,185,66,.45);' +
+        'color:#F5B942;padding:7px 14px;border-radius:999px;font-size:.72rem;' +
+        'font-family:var(--mono);pointer-events:none;';
+      b.textContent = 'Local mode — this board is on this device only';
+      document.body.appendChild(b);
+      setTimeout(() => b.remove(), 6000);
+    }
     initSizePresets();
     initLibraries();
   });
