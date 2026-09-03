@@ -464,9 +464,17 @@
   //  PWA SERVICE WORKER REGISTRATION
   // ================================================================
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('sw.js')
-      .then(reg => console.log('SW registered'))
-      .catch(err => console.warn('SW registration failed', err));
+    navigator.serviceWorker.register('sw.js').then(reg => {
+        reg.update();
+        // A new worker taking control means the old cached shell is gone;
+        // reload once so the user is not left on stale markup.
+        let refreshed = false;
+        navigator.serviceWorker.addEventListener('controllerchange', () => {
+          if (refreshed) return;
+          refreshed = true;
+          location.reload();
+        });
+      }).catch(() => {});
   }
 </script>
 </body>
