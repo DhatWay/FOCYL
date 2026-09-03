@@ -364,6 +364,7 @@
       background: var(--ink-2); color: var(--paper); cursor: pointer;
     }
     .cat-chips button:hover { background: var(--violet); color: #070914; }
+    .cat-chips button.active { background: var(--violet); color: #070914; border-color: transparent; }
     .results {
       display: grid; grid-template-columns: repeat(3,1fr); gap: 8px; margin-bottom: 10px;
     }
@@ -488,9 +489,16 @@
 
   <div class="panel" id="panelPhoto">
     <label for="photoQuery">Search free photos</label>
-    <input type="text" id="photoQuery" placeholder="studio, mid thirties…">
+    <input type="text" id="photoQuery" placeholder="mansion, yacht, sunrise…">
     <div class="cat-chips" id="photoChips"></div>
-    <button class="btn-primary" id="searchBtn" onclick="doSearch()">Search</button>
+    <label class="print-toggle">
+      <input type="checkbox" onchange="togglePrintMode(this.checked)">
+      Print-safe only — high resolution, licensed for products
+    </label>
+    <div class="crop-row">
+      <button class="btn-primary" id="searchBtn" onclick="doSearch()">Search</button>
+      <button class="btn-ghost" onclick="seedPhotoGrid(true)">Shuffle</button>
+    </div>
     <div class="results" id="results"></div>
     <p class="hint" id="photoHint"></p>
     <label>Or use your own</label>
@@ -748,6 +756,9 @@
                   'canvases','borders','audio','settings'];
 
   window.switchTab = function(panelId) {
+    // Fill the photo grid the first time the tab is opened, so it is
+    // never an empty box waiting on a search.
+    if (panelId === 'photo' && window.FocylImages) seedPhotoGrid();
     document.querySelectorAll('#sheetTabs > .tab').forEach(t => t.classList.remove('active'));
     const tab = document.getElementById('tab' + panelId.charAt(0).toUpperCase() + panelId.slice(1));
     if (tab) {
@@ -1392,6 +1403,54 @@
   // ================================================================
   //  BUTTON CALLBACKS
   // ================================================================
+  document.getElementById('photoQuery')?.addEventListener('keydown', e => {
+    if (e.key === 'Enter') { e.preventDefault(); doSearch(); }
+  });
+
+  // Rotating seed so the panel is never empty and never identical
+  // twice. Drawn from the images library categories.
+  let seeded = false;
+  window.seedPhotoGrid = async function seedPhotoGrid(force) {
+    if (seeded && !force) return;
+    seeded = true;
+    const grid = document.getElementById('results');
+    if (!grid) return;
+
+    const lib = await FocylLibraries.load('images');
+    const terms = lib.searchTerms || {};
+    const cats = Object.keys(terms);
+    if (!cats.length) return;
+
+    // Three categories per open, rotating, so it feels alive.
+    const start = Math.floor(Math.random() * cats.length);
+    const picked = [0, 1, 2].map(i => cats[(start + i) % cats.length]);
+
+    grid.innerHTML = '<p class="hint">Loading…</p>';
+    const batches = await Promise.allSettled(
+      picked.map(c => FocylImages.search(terms[c], { category: c, perPage: 6 }))
+    );
+
+    const all = [];
+    batches.forEach(b => {
+      if (b.status === 'fulfilled') all.push(...b.value.results.slice(0, 6));
+    });
+
+    if (!all.length) {
+      grid.innerHTML = '<p class="hint">Tap a category or type a search.</p>';
+      return;
+    }
+
+    // Shuffle so the three categories interleave rather than stacking.
+    for (let i = all.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [all[i], all[j]] = [all[j], all[i]];
+    }
+    paintResults(all);
+    const hint = document.getElementById('photoHint');
+    if (hint) hint.textContent = 'Browsing ' + picked.map(c => c.replace(/-/g, ' ')).join(', ') +
+      ' — search or tap a category for more.';
+  }
+
   window.doSearch = function() {
     const q = document.getElementById('photoQuery').value.trim();
     if (q) searchPhotos(q, activeCategory);
@@ -1568,8 +1627,9 @@
   };
 
   async function searchPhotos(query, category) {
+    seeded = true;                     // an explicit search counts as seeded
     activeCategory = category || activeCategory;
-    const grid = document.getElementById('photoResults');
+    const grid = document.getElementById('results');
     if (!grid) return;
     grid.innerHTML = '<p class="hint">Searching…</p>';
 
@@ -1585,27 +1645,34 @@
         return;
       }
 
-      grid.innerHTML = '';
-      results.forEach(r => {
-        const d = document.createElement('div');
-        d.className = 'photo-result';
-        d.style.backgroundImage = `url('${r.thumb}')`;
-        d.title = `${r.title || r.credit} · ${r.license} · ${r.w}×${r.h}`;
-
-        // Say plainly what a tile can and cannot be used for, at the
-        // point of choosing, not at print checkout when it is too late.
-        const badge = document.createElement('span');
-        badge.className = 'photo-badge' + (r.printSafe && r.commercialSafe ? ' ok' : '');
-        badge.textContent = r.printSafe && r.commercialSafe ? 'Print' : 'Screen';
-        d.appendChild(badge);
-
-        d.onclick = () => addPhotoTile(r);
-        grid.appendChild(d);
-      });
+      paintResults(results);
     } catch (err) {
       grid.innerHTML = '<p class="hint">Search unavailable right now.</p>';
       log('Search error: ' + err.message);
     }
+  }
+
+  function paintResults(results) {
+    const grid = document.getElementById('results');
+    if (!grid) return;
+    grid.innerHTML = '';
+    results.forEach(r => {
+      const d = document.createElement('div');
+      d.className = 'thumb photo-result';
+      d.style.backgroundImage = `url('${r.thumb}')`;
+      d.title = `${r.title || r.credit} · ${r.license} · ${r.w}×${r.h}`;
+
+      // State what a tile can be used for at the point of choosing,
+      // not at print checkout when it is too late to swap it.
+      const badge = document.createElement('span');
+      const safe = r.printSafe && r.commercialSafe;
+      badge.className = 'photo-badge' + (safe ? ' ok' : '');
+      badge.textContent = safe ? 'Print' : 'Screen';
+      d.appendChild(badge);
+
+      d.onclick = () => addPhotoTile(r);
+      grid.appendChild(d);
+    });
   }
 
   // Pull the chosen photo into our own storage. A tile that points at
@@ -1888,6 +1955,7 @@
 
     // Photo category chips, driven by the images library
     const imgLib = await FocylLibraries.load('images');
+    window._imgLib = imgLib;
     const chips = document.getElementById('photoChips');
     if (chips) {
       chips.innerHTML = '';
@@ -1895,7 +1963,12 @@
         const b = document.createElement('button');
         b.type = 'button';
         b.textContent = c.replace(/-/g, ' ');
-        b.onclick = () => searchCategory(imgLib.searchTerms?.[c] || c.replace(/-/g, ' '));
+        b.onclick = () => {
+          [...chips.children].forEach(x => x.classList.remove('active'));
+          b.classList.add('active');
+          seeded = true;
+          searchCategory(imgLib.searchTerms?.[c] || c.replace(/-/g, ' '), c);
+        };
         chips.appendChild(b);
       });
     }
