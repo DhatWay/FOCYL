@@ -255,8 +255,10 @@
     </form>
 
     <!-- BYPASS BUTTON (for development – remove later) -->
-    <!-- Dev only. Hidden unless FOCYL_CONFIG.devBypass is true. -->
-    <button class="btn-bypass hidden" id="bypassBtn">🚀 Bypass (test login)</button>
+    <!-- Local-only session. Shown while FOCYL_CONFIG.devBypass is true.
+         Boards created this way are stored in localStorage, not Supabase,
+         because RLS rejects a session with no real auth.uid(). -->
+    <button class="btn-bypass hidden" id="bypassBtn">Continue without an account</button>
   </div>
 
   <!-- PROFILE VIEW (shown after sign-in) -->
@@ -353,11 +355,19 @@
       let result;
       if (mode === 'up') {
         // Sign up
-        result = await sb.auth.signUp({ email, password });
+        // Without emailRedirectTo, Supabase sends the user to the Site URL
+        // set in the dashboard — which is why the confirmation link never
+        // came back here. This points it at the current deployment, whatever
+        // host or subfolder that is.
+        const redirectTo = new URL('auth.html?confirmed=1', location.href).href;
+        result = await sb.auth.signUp({
+          email, password,
+          options: { emailRedirectTo: redirectTo }
+        });
         if (result.error) throw result.error;
         // Check if email confirmation is required; if so, tell user
         if (result.data.user && !result.data.user.confirmed_at) {
-          showMsg('Account created! Please check your email to confirm your address, then sign in.', 'success');
+          showMsg('Account created. Check your email — the confirmation link returns you here.', 'success');
           return;
         }
         // If already confirmed (or disabled), proceed to sign in automatically
@@ -473,6 +483,25 @@
   //  Remove this button when you're done testing.
   // ------------------------------------------------------------
   // Only wire the bypass at all when explicitly enabled in config.
+  // Supabase puts the session in the URL fragment when the user clicks the
+  // confirmation link. Pick it up, then clean the address bar.
+  (async () => {
+    const hash = new URLSearchParams(location.hash.slice(1));
+    const params = new URLSearchParams(location.search);
+    if (hash.get('access_token') || params.get('confirmed')) {
+      try {
+        const { data } = await sb.auth.getSession();
+        if (data?.session?.user) {
+          history.replaceState({}, '', location.pathname);
+          await handleSuccessfulLogin(data.session.user);
+          return;
+        }
+      } catch (e) {}
+      showMsg('Email confirmed. Sign in to continue.', 'success');
+      history.replaceState({}, '', location.pathname);
+    }
+  })();
+
   if (window.FOCYL_CONFIG && FOCYL_CONFIG.devBypass) {
     els.bypassBtn.classList.remove('hidden');
   }
@@ -488,8 +517,8 @@
       sparks_balance: 999,
     };
     storeSession(fakeUser, fakeProfile);
-    showProfile();
-    showMsg('Bypass mode – you are logged in as a test user.', 'success');
+    showMsg('Local mode — opening your board…', 'success');
+    setTimeout(() => { window.location.href = 'board.html'; }, 400);
   });
 
   // ------------------------------------------------------------
