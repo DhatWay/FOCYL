@@ -1417,213 +1417,24 @@
     if (!grid) return;
 
     const lib = await FocylLibraries.load('images');
-    const terms = lib.searchTerms || {};
-    const cats = Object.keys(terms);
+    const cats = lib.categories || [];
     if (!cats.length) return;
 
-    // Three categories per open, rotating, so it feels alive.
-    const start = Math.floor(Math.random() * cats.length);
-    const picked = [0, 1, 2].map(i => cats[(start + i) % cats.length]);
+    // One category at a time. Rotate which one opens so it feels
+    // alive, but never blend two — the grid must always match the
+    // highlighted chip.
+    const idx = force ? Math.floor(Math.random() * cats.length) : 0;
+    const cat = cats[idx];
 
-    grid.innerHTML = '<p class="hint">Loading…</p>';
-    const batches = await Promise.allSettled(
-      picked.map(c => FocylImages.search(terms[c], { category: c, perPage: 6 }))
-    );
-
-    const all = [];
-    batches.forEach(b => {
-      if (b.status === 'fulfilled') all.push(...b.value.results.slice(0, 6));
-    });
-
-    if (!all.length) {
-      grid.innerHTML = '<p class="hint">Tap a category or type a search.</p>';
-      return;
+    const chips = document.getElementById('photoChips');
+    if (chips) {
+      [...chips.children].forEach(x => x.classList.remove('active'));
+      const label = cat.replace(/-/g, ' ');
+      const match = [...chips.children].find(b => b.textContent === label);
+      if (match) match.classList.add('active');
     }
 
-    // Shuffle so the three categories interleave rather than stacking.
-    for (let i = all.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [all[i], all[j]] = [all[j], all[i]];
-    }
-    paintResults(all);
-    const hint = document.getElementById('photoHint');
-    if (hint) hint.textContent = 'Browsing ' + picked.map(c => c.replace(/-/g, ' ')).join(', ') +
-      ' — search or tap a category for more.';
-  }
-
-  window.doSearch = function() {
-    const q = document.getElementById('photoQuery').value.trim();
-    if (q) searchPhotos(q, activeCategory);
-    else log('Search query empty');
-  };
-
-  // Category is passed through so aspirational sets (yachts, cars,
-  // mansions) lead with Pexels rather than documentary CC results.
-  window.searchCategory = function(term, category) {
-    document.getElementById('photoQuery').value = term;
-    searchPhotos(term, category || term.toLowerCase().replace(/\s+/g, '-'));
-  };
-
-  // ================================================================
-  //  TYPE CONTROLS (font, size, colour) + live preview
-  // ================================================================
-  const SWATCHES = ['#EDEFF7','#070914','#35D8F0','#8B7CF6','#EA4FC9','#F5B942'];
-
-  async function initTypeControls() {
-    const sel     = document.getElementById('fontFamilySelect');
-    const slider  = document.getElementById('textSizeSlider');
-    const sizeOut = document.getElementById('textSizeDisplay');
-    const picker  = document.getElementById('textColorPicker');
-    const hexOut  = document.getElementById('colorHex');
-    const chip    = document.getElementById('colorChip');
-    const preview = document.getElementById('typePreview');
-    const swatchBox = document.getElementById('colorSwatches');
-    if (!sel) return;
-
-    // Fonts come from the library, not a hardcoded <option> list.
-    const fonts = await FocylLibraries.items('fonts');
-    sel.innerHTML = '';
-    (fonts.length ? fonts : [{ id:'sora', name:'Sora', stack:"'Sora', sans-serif" }])
-      .forEach(f => {
-        const o = document.createElement('option');
-        o.value = f.stack; o.textContent = f.name;
-        o.style.fontFamily = f.stack;
-        sel.appendChild(o);
-      });
-
-    swatchBox.innerHTML = '';
-    SWATCHES.forEach(c => {
-      const b = document.createElement('button');
-      b.type = 'button'; b.style.background = c; b.title = c;
-      b.onclick = () => { picker.value = c; sync(); };
-      swatchBox.appendChild(b);
-    });
-
-    function sync() {
-      const size = slider.value;
-      sizeOut.textContent = size + 'px';
-      hexOut.textContent = picker.value.toUpperCase();
-      chip.style.background = picker.value;
-      const txt = document.getElementById('quoteText').value.trim() || 'Your vision';
-      preview.textContent = txt;
-      preview.style.fontFamily = sel.value;
-      preview.style.fontSize = Math.min(size, 46) + 'px';
-      preview.style.color = picker.value;
-    }
-
-    sel.addEventListener('change', sync);
-    slider.addEventListener('input', sync);
-    picker.addEventListener('input', sync);
-    document.getElementById('quoteText').addEventListener('input', sync);
-    sync();
-  }
-
-  window.addTextTile = function() {
-    const text = document.getElementById('quoteText').value.trim() || 'Your vision';
-    const fontSize = parseInt(document.getElementById('textSizeSlider').value) || 32;
-    const fontFamily = document.getElementById('fontFamilySelect').value;
-    const color = document.getElementById('textColorPicker').value;
-    // Size is measured by fitText once rendered; these are only a
-    // first frame so the tile does not flash at the wrong dimensions.
-    addTile({
-      type: 'text',
-      content: { text, fontSize, fontFamily, color },
-      w: TEXT_MIN_W,
-      h: fontSize + TEXT_PAD * 2,
-    });
-    closeSheet();
-    log('Text tile added');
-  };
-
-  window.handleFileUpload = async function(e) {
-    const file = e.target.files[0];
-    e.target.value = '';
-    if (!file) return;
-
-    setStatus('Uploading…');
-    try {
-      const m = await FocylMedia.uploadImage(file, boardId, { source: 'upload' });
-      addTile({
-        type: 'image',
-        source: 'upload',
-        content: {
-          url: m.url,
-          path: m.path || null,
-          originalUrl: m.originalUrl || null,
-          originalPath: m.originalPath || null,
-          printSafe: m.printSafe,
-          naturalW: m.naturalW,
-          naturalH: m.naturalH,
-          storage: m.storage
-        },
-        w: 300,
-        h: Math.round(300 * (m.h / m.w))
-      });
-      closeSheet();
-      setStatus(m.storage === 'local' ? 'Added (this device only)' : 'Uploaded');
-      log(`Image ${m.naturalW}x${m.naturalH} → ${m.storage}${m.printSafe ? ' · print safe' : ''}`);
-    } catch (err) {
-      setStatus('Upload failed');
-      log('Upload error: ' + err.message);
-      alert('Upload failed: ' + err.message);
-    }
-  };
-
-  window.handleAudioUpload = function(e) {
-    const file = e.target.files[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = (ev) => {
-      const dataUrl = ev.target.result;
-      addTile({
-        type: 'audio',
-        content: { url: dataUrl, name: file.name },
-        w: 180,
-        h: 120,
-      });
-      closeSheet();
-      log('Audio uploaded');
-    };
-    reader.readAsDataURL(file);
-    e.target.value = '';
-  };
-
-  window.resizeCanvas = function() {
-    const w = parseInt(document.getElementById('canvasWidth').value);
-    const h = parseInt(document.getElementById('canvasHeight').value);
-    if (w < 200 || h < 200) return;
-    if (board) {
-      board.width = w;
-      board.height = h;
-      canvas.style.width = w + 'px';
-      canvas.style.height = h + 'px';
-      // Clamp tiles to new boundaries
-      tiles.forEach(t => {
-        t.x = Math.max(0, Math.min(w - t.w, t.x));
-        t.y = Math.max(0, Math.min(h - t.h, t.y));
-        const el = document.querySelector(`.tile[data-id="${t.id}"]`);
-        if (el) {
-          el.style.left = t.x + 'px';
-          el.style.top = t.y + 'px';
-        }
-      });
-      localStorage.setItem(`focyl_board_size_${session.id}`, JSON.stringify({ w, h }));
-      saveBoard();
-      setStatus(`Board set to ${w}×${h}`);
-      fitToScreen();
-      log('Canvas resized to ' + w + 'x' + h);
-    }
-  };
-
-  // ================================================================
-  //  PHOTO SEARCH
-  // ================================================================
-  let printMode = false;
-  let activeCategory = null;
-  window.togglePrintMode = function(on) {
-    printMode = on;
-    const q = document.getElementById('photoQuery')?.value.trim();
-    if (q) searchPhotos(q, activeCategory);
+    await searchPhotos(lib.searchTerms?.[cat] || cat.replace(/-/g, ' '), cat);
   };
 
   async function searchPhotos(query, category) {
@@ -1634,14 +1445,22 @@
     grid.innerHTML = '<p class="hint">Searching…</p>';
 
     try {
-      const { results, rateLimited } = await FocylImages.search(query, {
-        category, perPage: 12, printMode
-      });
+      const { results, rateLimited, pexelsDown, printable, note } =
+        await FocylImages.search(query, { category, perPage: 12, printMode });
+
+      const hint = document.getElementById('photoHint');
+      if (hint) {
+        hint.textContent = note ? note
+          : printable === false ? 'Screen use only — this category cannot be printed on products.'
+          : '';
+      }
 
       if (!results.length) {
-        grid.innerHTML = `<p class="hint">${rateLimited
-          ? 'Search is busy right now — try again in a minute.'
-          : 'Nothing found. Try a broader word.'}</p>`;
+        grid.innerHTML = `<p class="hint">${
+          pexelsDown  ? 'This category needs the photo-search function deployed. Openverse cannot supply exclusive imagery for it.'
+          : rateLimited ? 'Search is busy right now — try again in a minute.'
+          : 'Nothing matched the filters. Try a broader word.'
+        }</p>`;
         return;
       }
 
