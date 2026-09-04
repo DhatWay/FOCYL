@@ -7,13 +7,13 @@
   <meta name="theme-color" content="#070914">
   <link rel="manifest" href="manifest.json">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="lib/focyl-config.js?v=13"></script>
-  <script src="lib/focyl-brand.js?v=13" defer></script>
-  <script src="lib/focyl-libraries.js?v=13" defer></script>
-  <script src="lib/focyl-picker.js?v=13" defer></script>
-  <script src="lib/focyl-media.js?v=13" defer></script>
-  <script src="lib/focyl-images.js?v=13" defer></script>
-  <script src="lib/focyl-ai.js?v=13" defer></script>
+  <script src="lib/focyl-config.js?v=14"></script>
+  <script src="lib/focyl-brand.js?v=14" defer></script>
+  <script src="lib/focyl-libraries.js?v=14" defer></script>
+  <script src="lib/focyl-picker.js?v=14" defer></script>
+  <script src="lib/focyl-media.js?v=14" defer></script>
+  <script src="lib/focyl-images.js?v=14" defer></script>
+  <script src="lib/focyl-ai.js?v=14" defer></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Sora:wght@400;500;600&family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
@@ -332,6 +332,62 @@
       font-size: 0.9rem; cursor: pointer; margin-bottom: 10px;
     }
     .hint { font-family: var(--mono); font-size: 0.75rem; color: var(--mist); margin: 0 0 12px; }
+    /* Board drawer — slides in from the left, lists every board. */
+    .title-btn {
+      display: flex; align-items: center; gap: 5px;
+      background: none; border: 0; padding: 2px 4px; cursor: pointer;
+      color: inherit; font-family: inherit; border-radius: 8px;
+    }
+    .title-btn:hover { background: rgba(255,255,255,.06); }
+    .title-btn .caret { width: 13px; height: 13px; color: var(--mist); flex: none; }
+
+    #boardDrawer {
+      position: fixed; top: 0; left: 0; bottom: 0; width: 268px; max-width: 82vw;
+      background: var(--ink-2); border-right: 1px solid var(--line);
+      transform: translateX(-100%); transition: transform .24s cubic-bezier(.22,1,.36,1);
+      z-index: 70; display: flex; flex-direction: column;
+      box-shadow: 18px 0 40px -22px rgba(0,0,0,.9);
+    }
+    #boardDrawer.open { transform: translateX(0); }
+    #boardDrawer header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 14px 14px 10px; border-bottom: 1px solid var(--line);
+    }
+    #boardDrawer header h3 {
+      margin: 0; font-size: .82rem; letter-spacing: .1em;
+      text-transform: uppercase; color: var(--mist); font-weight: 600;
+    }
+    #boardDrawer header button {
+      background: none; border: 0; color: var(--mist);
+      font-size: 1.2rem; cursor: pointer; padding: 0 4px;
+    }
+    #boardList { flex: 1; overflow-y: auto; padding: 10px; }
+    .board-row {
+      border: 1px solid var(--line); border-radius: 11px;
+      margin-bottom: 7px; overflow: hidden; background: var(--ink);
+    }
+    .board-row.active { border-color: var(--violet); background: rgba(139,124,246,.1); }
+    .board-name {
+      width: 100%; text-align: left; background: none; border: 0;
+      color: var(--paper); padding: 10px 12px; cursor: pointer;
+      display: flex; flex-direction: column; gap: 2px; font-family: inherit;
+    }
+    .board-name strong { font-size: .84rem; font-weight: 600; }
+    .board-name span { font-size: .6rem; font-family: var(--mono); color: var(--mist); }
+    .board-actions { display: flex; border-top: 1px solid var(--line); }
+    .board-actions button {
+      flex: 1; background: none; border: 0; color: var(--mist);
+      padding: 7px; font-size: .64rem; cursor: pointer; font-family: inherit;
+    }
+    .board-actions button:hover { background: rgba(255,255,255,.05); color: var(--paper); }
+    .board-actions .danger:hover { color: #ff8b80; }
+    #boardDrawer footer { padding: 10px; border-top: 1px solid var(--line); }
+    #drawerScrim {
+      position: fixed; inset: 0; background: rgba(3,5,14,.6);
+      z-index: 69; opacity: 0; pointer-events: none; transition: opacity .24s;
+    }
+    #boardDrawer.open ~ #drawerScrim { opacity: 1; pointer-events: auto; }
+
     .size-presets { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
     .size-presets button {
       background: var(--ink-2); border: 1px solid var(--line); color: var(--mist);
@@ -464,6 +520,18 @@
 <body>
 
 <!-- TOPBAR -->
+<aside id="boardDrawer">
+  <header>
+    <h3>Boards</h3>
+    <button onclick="closeBoardDrawer()" aria-label="Close">&times;</button>
+  </header>
+  <div id="boardList"></div>
+  <footer>
+    <button class="btn-primary" style="width:100%" onclick="newBoard()">New board</button>
+  </footer>
+</aside>
+<div id="drawerScrim" onclick="closeBoardDrawer()"></div>
+
 <div class="topbar">
   <div class="left">
     <button class="back" id="backBtn" aria-label="Back" title="Back">
@@ -474,7 +542,13 @@
     </button>
     <focyl-mark class="brand-logo" size="30" link href="index.html"
                 title="Focyl — home"></focyl-mark>
-    <span class="title" id="boardTitle">My Board</span>
+    <button class="title-btn" onclick="toggleBoardDrawer()" title="Switch board">
+      <span class="title" id="boardTitle">My Board</span>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"
+           stroke-linecap="round" stroke-linejoin="round" class="caret">
+        <polyline points="6 9 12 15 18 9"/>
+      </svg>
+    </button>
   </div>
   <div class="right">
     <div class="zoom-controls">
@@ -539,7 +613,6 @@
     <div class="crop-row" style="margin-top:12px">
       <button class="btn-primary" id="aiGenerateBtn" onclick="generateImage()">Generate</button>
       <button class="btn-ghost" onclick="showAiHistory()">My library</button>
-      <button class="btn-ghost" onclick="testAiKeys()">Test keys</button>
     </div>
     <p class="hint" id="aiHint"></p>
 
@@ -935,78 +1008,204 @@
   const BYPASS_ID = '00000000-0000-0000-0000-000000000000';
   const isLocalOnly = !session?.id || session.id === BYPASS_ID;
 
-  async function loadBoard() {
+  // ================================================================
+  //  BOARDS
+  //  maybeSingle() threw the moment a user had a second board. The
+  //  app now holds a list and loads one at a time.
+  // ================================================================
+  let boardList = [];
+
+  async function fetchBoards() {
+    if (!sb || isLocalOnly) return [];
+    const { data, error } = await sb
+      .from('boards')
+      .select('id,title,width,height,updated_at')
+      .eq('user_id', session.id)
+      .order('updated_at', { ascending: false });
+    if (error) { log('Board list error: ' + error.message); return []; }
+    return data || [];
+  }
+
+  async function loadBoard(targetId) {
     log('Loading board...');
     if (isLocalOnly) {
       boardId = 'local';
       setStatus('Local mode');
-      log('Local session — Supabase skipped');
     }
+
     try {
       if (sb && !isLocalOnly) {
-        const { data: boardData, error: boardError } = await sb
-          .from('boards')
-          .select('*')
-          .eq('user_id', session.id)
-          .maybeSingle();
-        if (boardError && boardError.code !== 'PGRST116') throw new Error('Supabase board fetch failed');
-        if (boardData) {
-          board = boardData;
-          boardId = board.id;
-          document.getElementById('boardTitle').textContent = board.title;
-          const { data: tileData, error: tileError } = await sb
-            .from('tiles')
-            .select('*')
-            .eq('board_id', boardId)
-            .order('z', { ascending: true });
-          if (tileError) throw tileError;
-          tiles = tileData || [];
-          restoreCanvasSize();
-          renderAll();
-          requestAnimationFrame(fitToScreen);
-          setStatus('Loaded from Supabase');
-          log('Loaded ' + tiles.length + ' tiles from Supabase');
-          return;
+        boardList = await fetchBoards();
+
+        // Remember which board was open last, so reopening the app
+        // returns you to what you were working on.
+        const remembered = localStorage.getItem(`focyl_last_board_${session.id}`);
+        let target = targetId
+          || (remembered && boardList.some(b => b.id === remembered) ? remembered : null)
+          || boardList[0]?.id;
+
+        if (!target) {
+          const created = await createBoard('My Board', { silent: true });
+          if (created) target = created.id;
+        }
+
+        if (target) {
+          const { data: boardData, error } = await sb
+            .from('boards').select('*').eq('id', target).maybeSingle();
+          if (error) throw error;
+
+          if (boardData) {
+            board = boardData;
+            boardId = board.id;
+            localStorage.setItem(`focyl_last_board_${session.id}`, boardId);
+            document.getElementById('boardTitle').textContent = board.title;
+
+            const { data: tileData, error: tErr } = await sb
+              .from('tiles').select('*').eq('board_id', boardId).order('z', { ascending: true });
+            if (tErr) throw tErr;
+
+            tiles = tileData || [];
+            deletedTileIds.clear();
+            restoreCanvasSize();
+            renderAll();
+            requestAnimationFrame(fitToScreen);
+            renderBoardList();
+            setStatus(`${board.title} · ${tiles.length} tiles`);
+            return;
+          }
         }
       }
+
       const localBoard = JSON.parse(localStorage.getItem(`focyl_board_${session.email}`) || 'null');
       if (localBoard) {
         board = { ...localBoard, id: 'local' };
+        boardId = 'local';
         tiles = localBoard.tiles || [];
+        restoreCanvasSize();
         renderAll();
-        setStatus('Loaded from localStorage');
-        log('Loaded ' + tiles.length + ' tiles from localStorage');
+        requestAnimationFrame(fitToScreen);
+        setStatus('Loaded from this device');
         return;
       }
+
       board = { title: 'My Board', width: DEFAULT_W, height: DEFAULT_H };
+      boardId = boardId || 'local';
       tiles = [];
       restoreCanvasSize();
       renderAll();
       requestAnimationFrame(fitToScreen);
       setStatus('New board');
-      log('New board created');
     } catch (err) {
       log('Load error: ' + err.message);
-      const localBoard = JSON.parse(localStorage.getItem(`focyl_board_${session.email}`) || 'null');
-      if (localBoard) {
-        board = { ...localBoard, id: 'local' };
-        tiles = localBoard.tiles || [];
-        renderAll();
-        setStatus('Loaded from localStorage (fallback)');
-        log('Fallback loaded ' + tiles.length + ' tiles');
-      } else {
-        board = { title: 'My Board', width: DEFAULT_W, height: DEFAULT_H };
-        tiles = [];
-        renderAll();
-        setStatus('New board (fallback)');
-        log('Fallback new board');
-      }
+      setStatus('Could not load board');
+      board = board || { title: 'My Board', width: DEFAULT_W, height: DEFAULT_H };
+      tiles = tiles || [];
+      renderAll();
     }
   }
 
-  // ================================================================
-  //  SAVE BOARD
-  // ================================================================
+  async function createBoard(title, { silent = false } = {}) {
+    if (!sb || isLocalOnly) { setStatus('Sign in to keep multiple boards'); return null; }
+    const { data, error } = await sb.from('boards').insert({
+      user_id: session.id,
+      title: title || 'Untitled',
+      width: DEFAULT_W,
+      height: DEFAULT_H
+    }).select().maybeSingle();
+    if (error) { log('Create failed: ' + error.message); setStatus('Could not create board'); return null; }
+    if (!silent) { boardList = await fetchBoards(); renderBoardList(); }
+    return data;
+  }
+
+  window.newBoard = async function() {
+    const title = prompt('Name this board:', 'New Board');
+    if (title === null) return;
+    await saveBoard({ immediate: true });
+    const created = await createBoard(title.trim() || 'Untitled');
+    if (created) { await loadBoard(created.id); closeBoardDrawer(); }
+  };
+
+  window.switchBoard = async function(id) {
+    if (id === boardId) { closeBoardDrawer(); return; }
+    await saveBoard({ immediate: true });
+    await loadBoard(id);
+    closeBoardDrawer();
+  };
+
+  window.renameBoard = async function(id) {
+    const current = boardList.find(b => b.id === id);
+    const title = prompt('Rename board:', current?.title || '');
+    if (title === null || !title.trim()) return;
+    if (sb && !isLocalOnly) {
+      await sb.from('boards').update({ title: title.trim() }).eq('id', id);
+    }
+    if (id === boardId) {
+      board.title = title.trim();
+      document.getElementById('boardTitle').textContent = board.title;
+    }
+    boardList = await fetchBoards();
+    renderBoardList();
+  };
+
+  window.deleteBoard = async function(id) {
+    const target = boardList.find(b => b.id === id);
+    if (!confirm(`Delete "${target?.title || 'this board'}" and everything on it?`)) return;
+    if (sb && !isLocalOnly) await sb.from('boards').delete().eq('id', id);
+    boardList = await fetchBoards();
+    if (id === boardId) {
+      // Do not leave the user staring at a board that no longer exists.
+      await loadBoard(boardList[0]?.id);
+    } else {
+      renderBoardList();
+    }
+  };
+
+  function renderBoardList() {
+    const host = document.getElementById('boardList');
+    if (!host) return;
+    host.innerHTML = '';
+
+    if (isLocalOnly) {
+      host.innerHTML = '<p class="hint">Sign in with an account to keep more than one board.</p>';
+      return;
+    }
+
+    boardList.forEach(b => {
+      const row = document.createElement('div');
+      row.className = 'board-row' + (b.id === boardId ? ' active' : '');
+
+      const name = document.createElement('button');
+      name.className = 'board-name';
+      name.innerHTML = `<strong>${b.title}</strong>` +
+        `<span>${b.width}×${b.height}</span>`;
+      name.onclick = () => switchBoard(b.id);
+
+      const menu = document.createElement('div');
+      menu.className = 'board-actions';
+      const ren = document.createElement('button');
+      ren.textContent = 'Rename';
+      ren.onclick = (e) => { e.stopPropagation(); renameBoard(b.id); };
+      const del = document.createElement('button');
+      del.textContent = 'Delete';
+      del.className = 'danger';
+      del.onclick = (e) => { e.stopPropagation(); deleteBoard(b.id); };
+      menu.append(ren, del);
+
+      row.append(name, menu);
+      host.appendChild(row);
+    });
+  }
+
+  window.toggleBoardDrawer = function() {
+    const d = document.getElementById('boardDrawer');
+    if (!d) return;
+    const open = d.classList.toggle('open');
+    if (open) renderBoardList();
+  };
+  window.closeBoardDrawer = function() {
+    document.getElementById('boardDrawer')?.classList.remove('open');
+  };
+
   // Tiles the user deleted this session. We delete exactly these,
   // never "everything then re-insert" — that window is where boards die.
   const deletedTileIds = new Set();
@@ -1026,9 +1225,26 @@
 
   function saveLocal() {
     try {
+      // Data-URL images are megabytes of text each and will blow the
+      // ~5MB localStorage quota, taking the whole board down with
+      // them. Strip them so positions, text and layout still persist.
+      let dropped = 0;
+      const slim = tiles.map(t => {
+        const url = t.content?.url || '';
+        if (typeof url === 'string' && url.startsWith('data:') && url.length > 40000) {
+          dropped++;
+          return { ...t, content: { ...t.content, url: null, unsaved: true } };
+        }
+        return t;
+      });
+
       localStorage.setItem(`focyl_board_${session.email}`, JSON.stringify({
-        title: board.title, tiles, width: board.width || DEFAULT_W, height: board.height || DEFAULT_H
+        title: board.title, tiles: slim,
+        width: board.width || DEFAULT_W, height: board.height || DEFAULT_H
       }));
+      if (dropped) {
+        log(`${dropped} image(s) not saved locally — sign in to keep them`);
+      }
       return true;
     } catch (err) {
       // Almost always QuotaExceededError from base64 image tiles.
@@ -1179,14 +1395,22 @@
       }
       content.addEventListener('input', () => {
         t.content.text = content.innerText;
-        fitText(t, el);
+        // Typing only re-fits a tile the user has not sized themselves.
+        if (!t.content.manualSize) fitText(t, el);
         saveBoard();
       });
       el.appendChild(content);
-      // Measure after the element is in the DOM and fonts have settled.
-      requestAnimationFrame(() => fitText(t, el));
-      if (document.fonts && document.fonts.ready) {
-        document.fonts.ready.then(() => fitText(t, el));
+      // Only auto-size a tile that has never been resized by hand.
+      // Otherwise the saved width wins and stays won.
+      if (!t.content.manualSize) {
+        requestAnimationFrame(() => fitText(t, el));
+        if (document.fonts && document.fonts.ready) {
+          document.fonts.ready.then(() => fitText(t, el));
+        }
+      } else {
+        el.style.width = t.w + 'px';
+        el.style.height = t.h + 'px';
+        content.style.whiteSpace = 'pre-wrap';
       }
       // Pure text, no box — pinch/twist on the tile resizes and rotates it,
       // same as image tiles. Only button is delete (×).
@@ -1369,6 +1593,10 @@
       } else if (mode === 'pinch' && pointers.size === 2) {
         const [a, b] = [...pointers.values()];
         const pinchScale = dist(a, b) / pinchStartDist;
+        if (tile.type === 'text') {
+          tile.content = tile.content || {};
+          tile.content.manualSize = true;      // stop auto-fit taking over
+        }
         const newW = Math.max(60, Math.min(1400, pinchStartW * pinchScale));
         const newH = Math.max(40, Math.min(1400, pinchStartH * pinchScale));
         const newRot = pinchStartRot + (angleOf(a, b) - pinchStartAngle);
@@ -1648,32 +1876,6 @@
     });
   }
 
-  // The function's GET health check cannot be opened in a browser tab:
-  // Supabase's gateway rejects any request without an auth header, and
-  // an address bar cannot send one. Called from here the anon key is
-  // attached, so the report comes back.
-  window.testAiKeys = async function() {
-    const hint = document.getElementById('aiHint');
-    if (hint) hint.textContent = 'Checking keys…';
-    try {
-      const base = FOCYL_CONFIG.supabaseUrl.replace(/\/$/, '');
-      const res = await fetch(`${base}/functions/v1/ai-image`, {
-        headers: { Authorization: `Bearer ${FOCYL_CONFIG.supabaseAnonKey}` }
-      });
-      const r = await res.json();
-
-      if (r.error) { if (hint) hint.textContent = r.error; return; }
-
-      const lines = [];
-      Object.entries(r.secrets || {}).forEach(([k, v]) => lines.push(`${k}: ${v}`));
-      Object.entries(r.providers || {}).forEach(([k, v]) => lines.push(`${k} → ${v}`));
-      if (hint) hint.textContent = lines.join('  ·  ') || 'No report returned';
-      log('Key check: ' + JSON.stringify(r));
-    } catch (err) {
-      if (hint) hint.textContent = 'Could not reach the function: ' + err.message;
-    }
-  };
-
   window.generateImage = async function() {
     const promptEl = document.getElementById('aiPrompt');
     const prompt = promptEl?.value.trim();
@@ -1705,8 +1907,8 @@
         hint.textContent = `Made with ${result.provider}${fell}${where}. Tap to place.`;
       }
       paintAiResult({ ...saved, provider: result.provider, prompt }, grid, true);
-      promptEl.value = '';
-      if (sel) delete sel.dataset.touched;
+      // The prompt stays. Generating variations of the same idea is
+      // the common case, and retyping it every time was needless.
       setStatus('Generated');
       log(`AI ${aiIntent} via ${result.provider} → ${category}`);
     } catch (err) {
@@ -2030,101 +2232,78 @@
   //  goes through Storage like any other image, and requests a
   //  print-resolution render rather than a 512px preview.
   // ================================================================
+  // ================================================================
+  //  REDESIGN
+  //  Was gated on an Edge Function named image-generate that never
+  //  existed, so it always bailed before reaching the AI layer.
+  //  Goes straight through FocylAI now, passing the current image as
+  //  a reference so the subject is edited rather than replaced.
+  // ================================================================
   async function redesignImageTile(tileId) {
     const tile = tiles.find(t => t.id === tileId);
     if (!tile || tile.type !== 'image') return;
 
     const theme = prompt(
-      'Describe the redesign:',
-      tile.content.prompt || 'cinematic, aspirational, high detail'
+      'How should this change?',
+      tile.content.prompt || 'brighter, more cinematic, richer colour'
     );
-    if (theme === null) return;
+    if (theme === null || !theme.trim()) return;
 
-    const fn = FOCYL_CONFIG?.fn?.imageGenerate;
-    const hasProxy = !!fn;
-    if (!hasProxy && !TILE_CONFIG.hfToken) {
-      alert('Image generation is not connected yet.\n\n' +
-            'Deploy the image-generate Edge Function, or set TILE_CONFIG.hfToken for local testing.');
-      return;
-    }
+    if (!window.FocylAI) { setStatus('AI layer not loaded'); return; }
 
     setStatus('Redesigning…');
     const el = document.querySelector(`.tile[data-id="${tile.id}"]`);
-    if (el) el.style.opacity = '0.5';
+    if (el) el.style.opacity = '0.45';
 
     try {
-      let blob;
-      if (window.FocylAI && tile.content.url) {
-        // Pass the existing image in as a reference so the redesign
-        // edits the subject instead of generating something unrelated.
-        const src = await fetch(tile.content.url).then(r => r.blob());
-        const ref = await FocylAI.blobToDataUrl(src);
-        const out = await FocylAI.generate(theme, { intent: 'photo', refImage: ref });
-        blob = out.blob;
-      } else if (hasProxy) {
-        const base = FOCYL_CONFIG.supabaseUrl.replace(/\/$/, '');
-        const res = await fetch(`${base}${fn}`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${FOCYL_CONFIG.supabaseAnonKey}`
-          },
-          body: JSON.stringify({ prompt: theme, width: 1536, height: 1536 })
-        });
-        if (!res.ok) throw new Error('Generation failed (' + res.status + ')');
-        blob = await res.blob();
-      } else {
-        const res = await fetch(
-          `https://api-inference.huggingface.co/models/${TILE_CONFIG.hfModel}`,
-          {
-            method: 'POST',
-            headers: {
-              Authorization: `Bearer ${TILE_CONFIG.hfToken}`,
-              'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-              inputs: theme,
-              parameters: { width: 1024, height: 1024 }
-            })
-          }
-        );
-        if (!res.ok) throw new Error('HF error ' + res.status);
-        blob = await res.blob();
+      // Fetch the current image as a reference. If it is cross-origin
+      // and blocked, fall back to generating from the prompt alone
+      // rather than failing outright.
+      let ref = null;
+      try {
+        const src = await fetch(tile.content.url, { mode: 'cors' }).then(r => r.blob());
+        ref = await FocylAI.blobToDataUrl(src);
+      } catch (_) {
+        log('Reference image unreadable — generating from prompt only');
       }
 
-      const m = await FocylMedia.uploadImage(blob, boardId, {
-        source: 'redesign', license: 'Generated'
+      const out = await FocylAI.generate(theme, { intent: 'photo', refImage: ref });
+      const saved = await FocylAI.save(out, {
+        prompt: theme,
+        category: FocylAI.categorise(theme).category,
+        kind: 'image'
       });
 
-      // Keep what it replaced, so a redesign is undoable.
+      // Keep the previous image so a redesign can be undone.
       tile.content.previousUrl = tile.content.url;
       tile.content.previousPath = tile.content.path || null;
       Object.assign(tile.content, {
-        url: m.url,
-        path: m.path || null,
-        originalUrl: m.originalUrl || null,
-        printSafe: m.printSafe,
+        url: saved.url,
+        path: saved.path || null,
+        printSafe: saved.printSafe,
         prompt: theme,
         credit: 'AI generated',
         license: 'Generated',
-        storage: m.storage
+        storage: saved.storage
       });
 
+      if (saved.w && saved.h) {
+        tile.h = Math.round(tile.w * (saved.h / saved.w));
+        if (el) el.style.height = tile.h + 'px';
+      }
       if (el) {
-        el.style.backgroundImage = `url('${m.url}')`;
+        el.style.backgroundImage = `url('${saved.url}')`;
         el.style.opacity = '1';
       }
-      tile.h = Math.round(tile.w * (m.h / m.w));
-      if (el) el.style.height = tile.h + 'px';
 
       saveBoard();
-      setStatus(m.printSafe ? 'Redesigned · print safe' : 'Redesigned');
-      log(`Redesign ${m.naturalW}x${m.naturalH} → ${m.storage}`);
+      setStatus(ref ? 'Redesigned' : 'Regenerated from prompt');
+      log(`Redesign via ${out.provider}`);
     } catch (err) {
       if (el) el.style.opacity = '1';
       setStatus('Redesign failed');
-      alert('Redesign failed: ' + err.message);
       log('Redesign error: ' + err.message);
+      alert(err.message);
     }
   }
 
@@ -2422,9 +2601,9 @@
         'background:rgba(245,185,66,.14);border:1px solid rgba(245,185,66,.45);' +
         'color:#F5B942;padding:7px 14px;border-radius:999px;font-size:.72rem;' +
         'font-family:var(--mono);pointer-events:none;';
-      b.textContent = 'Local mode — this board is on this device only';
+      b.textContent = 'Local mode — images will not survive a reload. Sign in to keep them.';
       document.body.appendChild(b);
-      setTimeout(() => b.remove(), 6000);
+      setTimeout(() => b.remove(), 9000);
     }
     if (window.FocylMedia) {
       FocylMedia.init({ sb, userId: session?.id, bucket: FOCYL_CONFIG?.storage?.bucket });
