@@ -7,13 +7,13 @@
   <meta name="theme-color" content="#070914">
   <link rel="manifest" href="manifest.json">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="lib/focyl-config.js?v=14"></script>
-  <script src="lib/focyl-brand.js?v=14" defer></script>
-  <script src="lib/focyl-libraries.js?v=14" defer></script>
-  <script src="lib/focyl-picker.js?v=14" defer></script>
-  <script src="lib/focyl-media.js?v=14" defer></script>
-  <script src="lib/focyl-images.js?v=14" defer></script>
-  <script src="lib/focyl-ai.js?v=14" defer></script>
+  <script src="lib/focyl-config.js?v=15"></script>
+  <script src="lib/focyl-brand.js?v=15" defer></script>
+  <script src="lib/focyl-libraries.js?v=15" defer></script>
+  <script src="lib/focyl-picker.js?v=15" defer></script>
+  <script src="lib/focyl-media.js?v=15" defer></script>
+  <script src="lib/focyl-images.js?v=15" defer></script>
+  <script src="lib/focyl-ai.js?v=15" defer></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Sora:wght@400;500;600&family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
@@ -423,6 +423,25 @@
       font-size: .72rem; color: var(--mist); cursor: pointer;
     }
     .print-toggle input { accent-color: var(--violet); width: 15px; height: 15px; }
+
+    .asset-gen {
+      border: 1px solid var(--line); border-radius: 12px;
+      padding: 12px; margin-bottom: 14px; background: rgba(255,255,255,.02);
+    }
+    .asset-gen label {
+      display: block; font-size: .62rem; letter-spacing: .09em;
+      text-transform: uppercase; color: var(--mist); margin: 0 0 5px;
+    }
+    .asset-gen input {
+      width: 100%; box-sizing: border-box; margin-bottom: 10px;
+      background: var(--ink-2); border: 1px solid var(--line);
+      color: var(--paper); border-radius: 9px; padding: 9px 11px;
+      font-family: inherit; font-size: .82rem;
+    }
+    .asset-gen input:focus { outline: none; border-color: var(--violet); }
+    .asset-gen .btn-primary { width: 100%; }
+    .asset-gen .ag-out:empty { display: none; }
+    .asset-gen .ag-out { margin-top: 10px; }
 
     #aiPrompt {
       width: 100%; box-sizing: border-box; resize: vertical;
@@ -1811,6 +1830,132 @@
   }
 
   // ================================================================
+  //  PER-TAB ASSET GENERATOR
+  //  Each tab knows what it makes, so the request is shaped for that
+  //  asset type. Typing "gold and black" in Ribbons returns a ribbon,
+  //  not a photograph of a ribbon on a wall.
+  // ================================================================
+  const ASSET_TABS = {
+    fonts:         { intent: 'lettering', text: 'Your word',      hint: 'e.g. bold gold art deco',    lib: 'fonts' },
+    papers:        { intent: 'paper',                             hint: 'e.g. aged parchment, ruled', lib: 'papers' },
+    notes:         { intent: 'note',                              hint: 'e.g. yellow, slightly curled', lib: 'notes' },
+    ribbons:       { intent: 'ribbon',   text: 'Text on ribbon',  hint: 'e.g. ornate gold and black', lib: 'ribbons' },
+    canvases:      { intent: 'canvas',                            hint: 'e.g. deep indigo nebula',    lib: 'canvases' },
+    borders_board: { intent: 'border',                            hint: 'e.g. ornate gold leaf',      lib: 'borders_board' },
+    borders_image: { intent: 'border',                            hint: 'e.g. thin brushed brass',    lib: 'borders_image' }
+  };
+
+  function buildAssetGenerator(hostSel, key) {
+    const host = document.querySelector(hostSel);
+    const spec = ASSET_TABS[key];
+    if (!host || !spec || host.querySelector('.asset-gen')) return;
+
+    const box = document.createElement('div');
+    box.className = 'asset-gen';
+    box.innerHTML = `
+      ${spec.text ? `<label>${spec.text}</label>
+      <input type="text" class="ag-text" placeholder="IAMTHEVGOD">` : ''}
+      <label>Describe the style</label>
+      <input type="text" class="ag-style" placeholder="${spec.hint}">
+      <button class="btn-primary ag-go">Generate ${spec.intent === 'border' ? 'frame' : spec.intent}</button>
+      <p class="hint ag-hint"></p>
+      <div class="results ag-out"></div>`;
+
+    host.insertBefore(box, host.firstChild);
+
+    const textEl  = box.querySelector('.ag-text');
+    const styleEl = box.querySelector('.ag-style');
+    const btn     = box.querySelector('.ag-go');
+    const hint    = box.querySelector('.ag-hint');
+    const out     = box.querySelector('.ag-out');
+
+    async function run() {
+      const style = styleEl.value.trim();
+      const text  = textEl ? textEl.value.trim() : '';
+      if (!style && !text) { hint.textContent = 'Describe it first.'; return; }
+
+      btn.disabled = true;
+      btn.textContent = 'Generating…';
+      hint.textContent = 'A few seconds…';
+
+      try {
+        const result = await FocylAI.generate(style, { intent: spec.intent, text });
+        const saved = await FocylAI.save(result, {
+          prompt: [text, style].filter(Boolean).join(' — '),
+          category: spec.lib,
+          kind: spec.intent
+        });
+
+        hint.textContent = `Made with ${result.provider}. Tap to place.`;
+
+        const d = document.createElement('div');
+        d.className = 'thumb ai-tile' + (result.transparent ? ' alpha' : '');
+        d.style.backgroundImage = `url('${saved.url}')`;
+        d.style.backgroundSize = 'contain';
+        d.onclick = () => placeAsset(saved, spec);
+        out.insertBefore(d, out.firstChild);
+        setStatus('Generated');
+      } catch (err) {
+        hint.textContent = err.message;
+      } finally {
+        btn.disabled = false;
+        btn.textContent = `Generate ${spec.intent === 'border' ? 'frame' : spec.intent}`;
+      }
+    }
+
+    btn.onclick = run;
+    [textEl, styleEl].forEach(el => el?.addEventListener('keydown', e => {
+      if (e.key === 'Enter') { e.preventDefault(); run(); }
+    }));
+  }
+
+  // Border assets wrap the canvas or a tile rather than becoming one.
+  function placeAsset(item, spec) {
+    const ratio = item.w && item.h ? item.h / item.w : 1;
+
+    if (spec.intent === 'border' && spec.lib === 'borders_board') {
+      canvas.style.borderImage = `url('${item.url}') 30 fill stretch`;
+      canvas.style.borderWidth = '38px';
+      canvas.style.borderStyle = 'solid';
+      board.border_id = item.id;
+      saveBoard();
+      closeSheet();
+      setStatus('Board frame applied');
+      return;
+    }
+
+    if (spec.intent === 'canvas' || spec.intent === 'texture') {
+      canvas.style.backgroundImage = `url('${item.url}')`;
+      canvas.style.backgroundSize = 'cover';
+      board.canvas_id = item.id;
+      saveBoard();
+      closeSheet();
+      setStatus('Background applied');
+      return;
+    }
+
+    // Paper and notes carry editable text; lettering and ribbons are art.
+    const isSurface = spec.intent === 'paper' || spec.intent === 'note';
+    const w = isSurface ? 300 : 280;
+
+    addTile({
+      type: isSurface ? 'text' : 'image',
+      source: 'ai',
+      library_id: spec.lib,
+      asset_id: item.id,
+      content: isSurface
+        ? { text: 'Write here', fontSize: 24, fontFamily: "'Sora', sans-serif",
+            color: '#14172b', paper: item.url, lineHeight: 32 }
+        : { url: item.url, path: item.path || null,
+            transparent: !!item.transparent, license: 'Generated' },
+      w,
+      h: Math.round(w * ratio)
+    });
+    closeSheet();
+    setStatus('Added to board');
+  }
+
+  // ================================================================
   //  AI GENERATION
   // ================================================================
   let aiIntent = 'photo';
@@ -2461,6 +2606,14 @@
     }
 
     // FONTS — applies to the selected tile, or seeds the next text tile
+    buildAssetGenerator('#panelFonts', 'fonts');
+    buildAssetGenerator('#panelPapers', 'papers');
+    buildAssetGenerator('#panelNotes', 'notes');
+    buildAssetGenerator('#panelRibbons', 'ribbons');
+    buildAssetGenerator('#panelCanvases', 'canvases');
+    buildAssetGenerator('#panelBordersBoard', 'borders_board');
+    buildAssetGenerator('#panelBordersImage', 'borders_image');
+
     await mount('#panelFonts', 'fonts', item => {
       const sel = document.getElementById('fontFamilySelect');
       if (sel) sel.value = item.stack;
