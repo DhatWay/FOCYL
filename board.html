@@ -1621,6 +1621,26 @@
       });
     });
 
+    // Enter generates. Shift+Enter adds a line, so long prompts
+    // are still possible.
+    const promptBox = document.getElementById('aiPrompt');
+    if (promptBox) {
+      promptBox.addEventListener('keydown', e => {
+        if (e.key === 'Enter' && !e.shiftKey) {
+          e.preventDefault();
+          generateImage();
+        }
+      });
+      // Live category preview as they type.
+      promptBox.addEventListener('input', () => {
+        const { category, confidence } = FocylAI.categorise(promptBox.value);
+        const sel = document.getElementById('aiCategory');
+        if (sel && confidence > 0 && !sel.dataset.touched) sel.value = category;
+      });
+    }
+    document.getElementById('aiCategory')
+      ?.addEventListener('change', e => { e.target.dataset.touched = '1'; });
+
     FocylAI.countToday().then(n => {
       const h = document.getElementById('aiHint');
       if (h && n) h.textContent = `${n} generated today.`;
@@ -1632,7 +1652,14 @@
     const prompt = promptEl?.value.trim();
     if (!prompt) { setStatus('Describe what you want first'); return; }
 
-    const category = document.getElementById('aiCategory')?.value || 'uncategorised';
+    // The description decides where it files. The dropdown only wins
+    // if the user deliberately changed it.
+    const sel = document.getElementById('aiCategory');
+    const auto = FocylAI.categorise(prompt);
+    const category = sel?.dataset.touched
+      ? sel.value
+      : (auto.confidence > 0 ? auto.category : (sel?.value || 'uncategorised'));
+    if (sel && !sel.dataset.touched) sel.value = category;
     const btn = document.getElementById('aiGenerateBtn');
     const grid = document.getElementById('aiResults');
     const hint = document.getElementById('aiHint');
@@ -1645,10 +1672,16 @@
       const result = await FocylAI.generate(prompt, { intent: aiIntent });
       const saved = await FocylAI.save(result, { prompt, category, kind: aiIntent });
 
-      if (hint) hint.textContent = `Made with ${result.provider}. Tap to place on the board.`;
-      paintAiResult(saved, grid, true);
+      if (hint) {
+        const where = category === 'uncategorised' ? '' : ` · filed under ${category.replace(/-/g, ' ')}`;
+        const fell = result.provider === 'cloudflare' ? ' (Gemini limit reached, switched over)' : '';
+        hint.textContent = `Made with ${result.provider}${fell}${where}. Tap to place.`;
+      }
+      paintAiResult({ ...saved, provider: result.provider, prompt }, grid, true);
+      promptEl.value = '';
+      if (sel) delete sel.dataset.touched;
       setStatus('Generated');
-      log(`AI ${aiIntent} via ${result.provider}`);
+      log(`AI ${aiIntent} via ${result.provider} → ${category}`);
     } catch (err) {
       if (hint) hint.textContent = err.message;
       setStatus('Generation failed');
