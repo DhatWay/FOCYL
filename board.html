@@ -7,13 +7,13 @@
   <meta name="theme-color" content="#070914">
   <link rel="manifest" href="manifest.json">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="lib/focyl-config.js?v=15"></script>
-  <script src="lib/focyl-brand.js?v=15" defer></script>
-  <script src="lib/focyl-libraries.js?v=15" defer></script>
-  <script src="lib/focyl-picker.js?v=15" defer></script>
-  <script src="lib/focyl-media.js?v=15" defer></script>
-  <script src="lib/focyl-images.js?v=15" defer></script>
-  <script src="lib/focyl-ai.js?v=15" defer></script>
+  <script src="lib/focyl-config.js?v=16"></script>
+  <script src="lib/focyl-brand.js?v=16" defer></script>
+  <script src="lib/focyl-libraries.js?v=16" defer></script>
+  <script src="lib/focyl-picker.js?v=16" defer></script>
+  <script src="lib/focyl-media.js?v=16" defer></script>
+  <script src="lib/focyl-images.js?v=16" defer></script>
+  <script src="lib/focyl-ai.js?v=16" defer></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Sora:wght@400;500;600&family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
@@ -1886,7 +1886,9 @@
           kind: spec.intent
         });
 
-        hint.textContent = `Made with ${result.provider}. Tap to place.`;
+        hint.textContent = result.failoverReason
+          ? `Fell back to ${result.provider} — Gemini said: ${result.failoverReason}`
+          : `Made with ${result.provider}. Tap to place.`;
 
         const d = document.createElement('div');
         d.className = 'thumb ai-tile' + (result.transparent ? ' alpha' : '');
@@ -2048,7 +2050,7 @@
 
       if (hint) {
         const where = category === 'uncategorised' ? '' : ` · filed under ${category.replace(/-/g, ' ')}`;
-        const fell = result.provider === 'cloudflare' ? ' (Gemini limit reached, switched over)' : '';
+        const fell = result.failoverReason ? ` (Gemini: ${result.failoverReason})` : '';
         hint.textContent = `Made with ${result.provider}${fell}${where}. Tap to place.`;
       }
       paintAiResult({ ...saved, provider: result.provider, prompt }, grid, true);
