@@ -539,6 +539,7 @@
     <div class="crop-row" style="margin-top:12px">
       <button class="btn-primary" id="aiGenerateBtn" onclick="generateImage()">Generate</button>
       <button class="btn-ghost" onclick="showAiHistory()">My library</button>
+      <button class="btn-ghost" onclick="testAiKeys()">Test keys</button>
     </div>
     <p class="hint" id="aiHint"></p>
 
@@ -1646,6 +1647,32 @@
       if (h && n) h.textContent = `${n} generated today.`;
     });
   }
+
+  // The function's GET health check cannot be opened in a browser tab:
+  // Supabase's gateway rejects any request without an auth header, and
+  // an address bar cannot send one. Called from here the anon key is
+  // attached, so the report comes back.
+  window.testAiKeys = async function() {
+    const hint = document.getElementById('aiHint');
+    if (hint) hint.textContent = 'Checking keys…';
+    try {
+      const base = FOCYL_CONFIG.supabaseUrl.replace(/\/$/, '');
+      const res = await fetch(`${base}/functions/v1/ai-image`, {
+        headers: { Authorization: `Bearer ${FOCYL_CONFIG.supabaseAnonKey}` }
+      });
+      const r = await res.json();
+
+      if (r.error) { if (hint) hint.textContent = r.error; return; }
+
+      const lines = [];
+      Object.entries(r.secrets || {}).forEach(([k, v]) => lines.push(`${k}: ${v}`));
+      Object.entries(r.providers || {}).forEach(([k, v]) => lines.push(`${k} → ${v}`));
+      if (hint) hint.textContent = lines.join('  ·  ') || 'No report returned';
+      log('Key check: ' + JSON.stringify(r));
+    } catch (err) {
+      if (hint) hint.textContent = 'Could not reach the function: ' + err.message;
+    }
+  };
 
   window.generateImage = async function() {
     const promptEl = document.getElementById('aiPrompt');
