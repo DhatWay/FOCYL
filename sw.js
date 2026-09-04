@@ -8,7 +8,7 @@
 
    Bump CACHE on every deploy.
    ============================================================ */
-const CACHE = 'focyl-v15';
+const CACHE = 'focyl-v16';
 
 const SHELL = [
   './', './index.html', './auth.html', './board.html', './manifest.json',
